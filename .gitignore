@@ -1,0 +1,30 @@
+# Environment
+.env
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Data (large files, not tracked)
+data/raw/*
+data/processed/*
+
+# Keep the directories themselves
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Node
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
