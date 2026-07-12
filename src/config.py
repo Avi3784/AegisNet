@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_RAW = PROJECT_ROOT / "data" / "raw"
 DATA_PROCESSED = PROJECT_ROOT / "data" / "processed"
+MODEL_DIR = PROJECT_ROOT / "models"
 MODEL_BUNDLE = PROJECT_ROOT / "models" / "artifact_bundle"
 
 # ── Environment ──────────────────────────────────────────────────────────
