@@ -86,9 +86,14 @@ async def lifespan(app: FastAPI):
     
     # Load models if available
     if model_path.exists() and scaler_path.exists():
-        _model = joblib.load(model_path)
-        _scaler = joblib.load(scaler_path)
-        logger.info("ML models loaded successfully.")
+        try:
+            _model = joblib.load(model_path)
+            _scaler = joblib.load(scaler_path)
+            logger.info("ML models loaded successfully.")
+        except Exception as e:
+            logger.warning(f"Failed to load ML models: {e}. Running in demo mode.")
+            _model = None
+            _scaler = None
     else:
         logger.warning("ML model files not found. Running in demo mode without ML predictions.")
         
