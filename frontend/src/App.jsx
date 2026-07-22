@@ -32,7 +32,7 @@ export default function App() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:8000/api/history', {
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/history`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {
@@ -131,7 +131,7 @@ export default function App() {
 
   const handleDownloadReport = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/reports/download', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/reports/download`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Failed to download report');

@@ -25,7 +25,7 @@ const CognitivePanel = ({ latestThreat, token }) => {
     if (!latestThreat?.timestamp) return;
     setFeedbackState('submitting');
     try {
-      await fetch('http://localhost:8000/api/feedback', {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

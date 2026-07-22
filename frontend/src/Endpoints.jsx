@@ -6,7 +6,7 @@ export default function Endpoints({ endpoints, onIsolate, onReconnect }) {
 
   const handleSandboxDetonate = async (base64) => {
     try {
-      const res = await fetch('http://localhost:8000/api/sandbox/detonate', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/sandbox/detonate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ payload: base64 })

@@ -36,7 +36,7 @@ export default function Settings({ token }) {
 
   useEffect(() => {
     // Fetch settings on mount
-    fetch('http://localhost:8000/api/settings', {
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/settings`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -51,7 +51,7 @@ export default function Settings({ token }) {
   const handleSaveAlerts = async (e) => {
     if (e) e.preventDefault();
     try {
-      await fetch('http://localhost:8000/api/settings', {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/settings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export default function Settings({ token }) {
     const newVal = !strictMode;
     setStrictMode(newVal);
     try {
-      await fetch('http://localhost:8000/api/settings', {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/settings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
