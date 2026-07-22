@@ -13,5 +13,5 @@ echo.
 echo ===================================================
 echo AegisNet Demo is running!
 echo Backend API: http://127.0.0.1:8000
-echo Frontend Dashboard: http://localhost:5173
+echo Frontend Dashboard: http://localhost:5174
 echo ===================================================

@@ -17,16 +17,19 @@ logger = logging.getLogger(__name__)
 DEFAULT_ERROR_REPORT = {
     "Threat_Analysis": "Cognitive engine unavailable. Model flagged a potential anomaly.",
     "Confidence_Validation": "N/A - LLM offline.",
-    "Recommended_Mitigation": ["Block IP immediately", "Investigate manually"]
+    "Recommended_Mitigation": ["Block IP immediately", "Investigate manually"],
+    "MITRE_Techniques": ["T0000 Unknown"]
 }
 
 SYSTEM_PROMPT = """
-You are AegisNet's Cognitive Engine. Analyze the given network flow data and provide a threat analysis.
+You are AegisNet's Cognitive Engine, an expert in ATM network fraud and security. Analyze the given network flow data and provide a threat analysis from an ATM banking perspective (e.g., suspecting card skimming, jackpotting, or malware C2).
+DO NOT use the word "BENIGN" under any circumstances. If the flow is safe, use the word "NORMAL" or "SAFE".
 Respond ONLY with a valid JSON object strictly adhering to this schema:
 {
   "Threat_Analysis": "A brief explanation of the likely attack.",
   "Confidence_Validation": "Your confidence in the threat assessment.",
-  "Recommended_Mitigation": ["Concrete mitigation step 1", "Concrete mitigation step 2"]
+  "Recommended_Mitigation": ["Concrete mitigation step 1", "Concrete mitigation step 2"],
+  "MITRE_Techniques": ["T1059.001 PowerShell", "T1046 Network Service Scanning"]
 }
 """
 
@@ -163,10 +166,59 @@ class CognitiveEngine:
                 return None
 
     def _validate_schema(self, data: dict):
-        required_keys = {"Threat_Analysis", "Confidence_Validation", "Recommended_Mitigation"}
+        required_keys = {"Threat_Analysis", "Confidence_Validation", "Recommended_Mitigation", "MITRE_Techniques"}
         if not required_keys.issubset(data.keys()):
             raise ValueError(f"Missing required keys in JSON. Found keys: {list(data.keys())}")
-        if not isinstance(data["Recommended_Mitigation"], list) or len(data["Recommended_Mitigation"]) != 2:
-            raise ValueError("Recommended_Mitigation must be a list of exactly 2 strings.")
+        if not isinstance(data["Recommended_Mitigation"], list) or len(data["Recommended_Mitigation"]) == 0:
+            raise ValueError("Recommended_Mitigation must be a non-empty list of strings.")
+        if not isinstance(data.get("MITRE_Techniques"), list):
+            raise ValueError("MITRE_Techniques must be a list of strings.")
 
 engine = CognitiveEngine()
+
+COPILOT_SYSTEM_PROMPT = """If the user asks to isolate or reconnect an ATM, you must return a JSON object with this exact schema: `{"response": "your text", "action": {"type": "isolate_host" | "reconnect_host", "target": "ATM-XX"}}`. If no action is needed, return `{"response": "your text", "action": null}`."""
+
+async def chat_with_copilot(message: str):
+    if not GROQ_API_KEY and GEMINI_API_KEY:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+        headers = {"Content-Type": "application/json"}
+        payload = {
+            "system_instruction": {"parts": [{"text": COPILOT_SYSTEM_PROMPT}]},
+            "contents": [{"parts": [{"text": message}]}],
+            "generationConfig": {"responseMimeType": "application/json", "temperature": 0.1}
+        }
+        async with httpx.AsyncClient(timeout=LLM_REQUEST_TIMEOUT_SEC) as client:
+            try:
+                resp = await client.post(url, headers=headers, json=payload)
+                resp.raise_for_status()
+                data = resp.json()
+                content = data["candidates"][0]["content"]["parts"][0]["text"]
+                return json.loads(content)
+            except Exception as e:
+                logger.error(f"Copilot Gemini failed: {e}")
+                return {"response": "Error processing request.", "action": None}
+
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": GROQ_MODEL,
+        "messages": [
+            {"role": "system", "content": COPILOT_SYSTEM_PROMPT},
+            {"role": "user", "content": message}
+        ],
+        "response_format": {"type": "json_object"},
+        "temperature": 0.1
+    }
+    async with httpx.AsyncClient(timeout=LLM_REQUEST_TIMEOUT_SEC) as client:
+        try:
+            resp = await client.post(url, headers=headers, json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+            content = data["choices"][0]["message"]["content"]
+            return json.loads(content)
+        except Exception as e:
+            logger.error(f"Copilot Groq failed: {e}")
+            return {"response": "Error processing request.", "action": None}

@@ -1,0 +1,55 @@
+{
+    "cv_mean_accuracy": 0.9982085025656954,
+    "cv_std_accuracy": 0.0001226288451659901,
+    "train_accuracy": 0.9982617022698086,
+    "test_accuracy": 0.9984658477923055,
+    "overfitting_gap": -0.00020414552249692353,
+    "feature_importances": {
+        "bwd_packet_length_mean": 0.523024320602417,
+        "bwd_packet_length_max": 0.22194205224514008,
+        "destination_port": 0.05945681035518646,
+        "total_bwd_bytes": 0.0383346863090992,
+        "flow_packets_per_sec": 0.03779410198330879,
+        "fin_flag_count": 0.027787603437900543,
+        "total_bwd_packets": 0.02430039644241333,
+        "flow_iat_mean": 0.014131517149508,
+        "psh_flag_count": 0.012832879088819027,
+        "total_fwd_packets": 0.011843889020383358,
+        "down_up_ratio": 0.007228045724332333,
+        "fwd_packet_length_max": 0.005455905105918646,
+        "syn_flag_count": 0.005073369946330786,
+        "flow_duration": 0.0027808137238025665,
+        "flow_bytes_per_sec": 0.002722728531807661,
+        "fwd_packet_length_mean": 0.0026895194314420223,
+        "total_fwd_bytes": 0.002146239625290036,
+        "ack_flag_count": 0.00045513446093536913,
+        "rst_flag_count": 0.0
+    },
+    "classification_report": {
+        "NORMAL": {
+            "precision": 0.9989527256692451,
+            "recall": 0.9991485399604285,
+            "f1-score": 0.9990506232199186,
+            "support": 163249.0
+        },
+        "THREAT": {
+            "precision": 0.9964161402604099,
+            "recall": 0.9955947136563876,
+            "f1-score": 0.9960052575964538,
+            "support": 38817.0
+        },
+        "accuracy": 0.9984658477923055,
+        "macro avg": {
+            "precision": 0.9976844329648276,
+            "recall": 0.9973716268084081,
+            "f1-score": 0.9975279404081862,
+            "support": 202066.0
+        },
+        "weighted avg": {
+            "precision": 0.9984654460882431,
+            "recall": 0.9984658477923055,
+            "f1-score": 0.9984656066540143,
+            "support": 202066.0
+        }
+    }
+}
