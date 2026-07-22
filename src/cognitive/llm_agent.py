@@ -23,7 +23,7 @@ DEFAULT_ERROR_REPORT = {
 
 SYSTEM_PROMPT = """
 You are AegisNet's Cognitive Engine, an expert in ATM network fraud and security. Analyze the given network flow data and provide a threat analysis from an ATM banking perspective (e.g., suspecting card skimming, jackpotting, or malware C2).
-DO NOT use the word "BENIGN" under any circumstances. If the flow is safe, use the word "NORMAL" or "SAFE".
+DO NOT use the word "BEGIN" under any circumstances. If the flow is safe, use the word "NORMAL" or "SAFE".
 Respond ONLY with a valid JSON object strictly adhering to this schema:
 {
   "Threat_Analysis": "A brief explanation of the likely attack.",

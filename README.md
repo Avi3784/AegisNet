@@ -11,7 +11,7 @@ Raw Packets → DPI Feature Extraction (19 features)
                     ↓
               XGBoost Classifier
                     ↓
-         ┌─── Benign → log flow
+         ┌─── begin → log flow
          └─── Attack → Cognitive Engine (Groq / Gemini)
                               ↓
                      FastAPI WebSocket

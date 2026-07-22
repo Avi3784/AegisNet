@@ -64,9 +64,9 @@ def prepare_dataset():
     
     # Process files
     file_configs = [
-        {"pattern": "*Tuesday*", "keep": ["BENIGN", "FTP-Patator", "SSH-Patator"]},
-        {"pattern": "*Wednesday*", "keep": ["BENIGN", "DoS Hulk", "DoS GoldenEye", "DoS slowloris", "DoS Slowhttptest"]},
-        {"pattern": "*Friday*", "keep": ["BENIGN", "PortScan"]}
+        {"pattern": "*Tuesday*", "keep": ["BEGIN", "FTP-Patator", "SSH-Patator"]},
+        {"pattern": "*Wednesday*", "keep": ["BEGIN", "DoS Hulk", "DoS GoldenEye", "DoS slowloris", "DoS Slowhttptest"]},
+        {"pattern": "*Friday*", "keep": ["BEGIN", "PortScan"]}
     ]
     
     for config in file_configs:
@@ -116,8 +116,8 @@ def prepare_dataset():
     full_df = full_df.dropna()
     full_df = full_df.drop_duplicates()
     
-    # Create binary label (0=BENIGN, 1=Attack)
-    full_df['binary_label'] = (full_df['label'] != 'BENIGN').astype(int)
+    # Create binary label (0=BEGIN, 1=Attack)
+    full_df['binary_label'] = (full_df['label'] != 'BEGIN').astype(int)
     
     print(f"full_df.shape: {full_df.shape}")
     print("full_df['binary_label'].value_counts():")
