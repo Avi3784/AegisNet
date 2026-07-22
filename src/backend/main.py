@@ -36,43 +36,80 @@ logger = logging.getLogger(__name__)
 _model = None
 _scaler = None
 
+def _ensure_synthetic_csv(csv_path):
+    """Generate a small synthetic CSV if the real one is missing (e.g. cloud deploy)."""
+    import random
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    rows = []
+    for _ in range(50):
+        row = {
+            "destination_port": random.choice([22, 80, 443, 8080, 3389]),
+            "flow_duration": random.randint(1000, 120000000),
+            "total_fwd_packets": random.randint(1, 500),
+            "total_bwd_packets": random.randint(0, 300),
+            "total_fwd_bytes": random.randint(40, 500000),
+            "total_bwd_bytes": random.randint(0, 400000),
+            "fwd_packet_length_max": random.randint(40, 1500),
+            "fwd_packet_length_mean": round(random.uniform(40, 800), 2),
+            "bwd_packet_length_max": random.randint(0, 1500),
+            "bwd_packet_length_mean": round(random.uniform(0, 600), 2),
+            "flow_bytes_per_sec": round(random.uniform(100, 5000000), 2),
+            "flow_packets_per_sec": round(random.uniform(1, 50000), 2),
+            "flow_iat_mean": round(random.uniform(0, 5000000), 2),
+            "down_up_ratio": round(random.uniform(0, 10), 2),
+            "syn_flag_count": random.randint(0, 5),
+            "ack_flag_count": random.randint(0, 20),
+            "fin_flag_count": random.randint(0, 3),
+            "rst_flag_count": random.randint(0, 2),
+            "psh_flag_count": random.randint(0, 10),
+        }
+        rows.append(row)
+    df = pd.DataFrame(rows)
+    df.to_csv(csv_path, index=False)
+    logger.info(f"Generated synthetic CSV at {csv_path} with {len(rows)} rows.")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _model, _scaler
-    # Check dependencies before starting
     model_path = MODEL_DIR / "ensemble_model.pkl"
     scaler_path = MODEL_DIR / "scaler.pkl"
     csv_path = DATA_PROCESSED / "custom_extracted_features.csv"
     
-    missing = []
-    if not model_path.exists(): missing.append(str(model_path))
-    if not scaler_path.exists(): missing.append(str(scaler_path))
-    if not csv_path.exists(): missing.append(str(csv_path))
+    # Ensure data directories exist
+    DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
+    MODEL_DIR.mkdir(parents=True, exist_ok=True)
     
-    if missing:
-        msg = f"Startup aborted. Missing required files: {missing}"
-        logger.error(msg)
-        raise RuntimeError(msg)
+    # Generate synthetic CSV if missing (cloud deployment)
+    if not csv_path.exists():
+        logger.warning(f"CSV not found at {csv_path}. Generating synthetic data for demo mode.")
+        _ensure_synthetic_csv(csv_path)
     
-    _model = joblib.load(model_path)
-    _scaler = joblib.load(scaler_path)
+    # Load models if available
+    if model_path.exists() and scaler_path.exists():
+        _model = joblib.load(model_path)
+        _scaler = joblib.load(scaler_path)
+        logger.info("ML models loaded successfully.")
+    else:
+        logger.warning("ML model files not found. Running in demo mode without ML predictions.")
         
     logger.info("Initializing database...")
     init_db()
 
-    logger.info("All dependencies found. Starting pipeline loop task...")
-    pipeline_task = asyncio.create_task(run_pipeline_loop())
-    simulator_task = asyncio.create_task(run_endpoint_simulator())
+    logger.info("Starting background tasks...")
+    tasks = []
+    if _model and _scaler:
+        tasks.append(asyncio.create_task(run_pipeline_loop()))
+    tasks.append(asyncio.create_task(run_endpoint_simulator()))
     
     yield
     
     logger.info("Shutting down. Cancelling background tasks...")
-    pipeline_task.cancel()
-    simulator_task.cancel()
-    try:
-        await pipeline_task
-    except asyncio.CancelledError:
-        pass
+    for t in tasks:
+        t.cancel()
+        try:
+            await t
+        except asyncio.CancelledError:
+            pass
 
 app = FastAPI(title="AegisNet API", lifespan=lifespan)
 
@@ -82,7 +119,7 @@ app.include_router(reports_router)
 # CORS config
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
