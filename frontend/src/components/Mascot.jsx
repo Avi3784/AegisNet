@@ -3,25 +3,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const MASCOT_STATES = {
   happy: {
-    color: '#06b6d4', // Cyan
+    color: '#3b82f6', // Blue
     secondary: '#8b5cf6', // Violet
-    glow: 'rgba(6, 182, 212, 0.4)',
+    glow: 'rgba(59, 130, 246, 0.5)',
     eyeStyle: 'happy', // ◕‿◕
-    message: ['I\'ll protect your ATMs! uwu', 'Network is squeaky clean! ✨', 'Hovering around...', 'No baddies in sight! 🚀', 'All systems purring!'],
+    message: ['I\'m your trusty Shield! uwu', 'Vault is secure! ✨', 'Standing guard...', 'No baddies in sight! 🚀', 'All systems protected!'],
   },
   alert: {
     color: '#f97316', // Orange
     secondary: '#f59e0b', // Amber
     glow: 'rgba(249, 115, 22, 0.6)',
     eyeStyle: 'alert', // ⊙△⊙
-    message: ['Uh oh! Something is wrong 😰', 'Investigating anomaly...', 'Who goes there?! 🚨', 'Protecting the vault!'],
+    message: ['Shield taking damage! 😰', 'Bracing for impact...', 'Who goes there?! 🚨', 'Defending the perimeter!'],
   },
   apt: {
     color: '#ef4444', // Red
     secondary: '#b91c1c', // Dark red
     glow: 'rgba(239, 68, 68, 0.8)',
     eyeStyle: 'apt', // ✕‿✕
-    message: ['APT DETECTED!! 💀', 'SHIELDS UP! DEFCON 1! 😱', 'Intruder alert! Call backup!', 'We are under heavy attack!'],
+    message: ['CRITICAL BREACH!! 💀', 'SHIELDS FAILING! 😱', 'Intruder alert! Call backup!', 'MAXIMUM DEFENSE ACTIVATED!'],
   }
 };
 
@@ -100,23 +100,22 @@ export default function Mascot({ isUnderAttack, hasApt }) {
   const Eyes = () => {
     if (mascot.eyeStyle === 'happy') {
       return (
-        <div className="flex justify-between w-full px-2">
-          {/* Blink animation built into these */}
-          <motion.div animate={{ scaleY: [1, 1, 0.1, 1] }} transition={{ duration: 3, repeat: Infinity, times: [0, 0.9, 0.95, 1] }} className="w-2.5 h-3 bg-slate-900 rounded-full" />
-          <motion.div animate={{ scaleY: [1, 1, 0.1, 1] }} transition={{ duration: 3, repeat: Infinity, times: [0, 0.9, 0.95, 1] }} className="w-2.5 h-3 bg-slate-900 rounded-full" />
+        <div className="flex justify-between w-full px-2 mt-2">
+          <motion.div animate={{ scaleY: [1, 1, 0.1, 1] }} transition={{ duration: 3, repeat: Infinity, times: [0, 0.9, 0.95, 1] }} className="w-2.5 h-3 bg-white rounded-full" />
+          <motion.div animate={{ scaleY: [1, 1, 0.1, 1] }} transition={{ duration: 3, repeat: Infinity, times: [0, 0.9, 0.95, 1] }} className="w-2.5 h-3 bg-white rounded-full" />
         </div>
       );
     } else if (mascot.eyeStyle === 'alert') {
       return (
-        <div className="flex justify-between w-full px-1.5">
-          <div className="w-3 h-3 border-2 border-slate-900 rounded-full flex items-center justify-center"><div className="w-1 h-1 bg-slate-900 rounded-full" /></div>
-          <div className="w-3 h-3 border-2 border-slate-900 rounded-full flex items-center justify-center"><div className="w-1 h-1 bg-slate-900 rounded-full" /></div>
+        <div className="flex justify-between w-full px-1.5 mt-2">
+          <div className="w-3 h-3 border-2 border-white rounded-full flex items-center justify-center"><div className="w-1 h-1 bg-white rounded-full" /></div>
+          <div className="w-3 h-3 border-2 border-white rounded-full flex items-center justify-center"><div className="w-1 h-1 bg-white rounded-full" /></div>
         </div>
       );
     } else {
       // APT Xs
       return (
-        <div className="flex justify-between w-full px-1.5 text-slate-900 font-black text-[10px] leading-none">
+        <div className="flex justify-between w-full px-1.5 mt-2 text-white font-black text-xs leading-none drop-shadow-[0_0_5px_white]">
           <span>✕</span>
           <span>✕</span>
         </div>
@@ -149,7 +148,7 @@ export default function Mascot({ isUnderAttack, hasApt }) {
             style={{ transform: `scaleX(${direction}) translateX(-50%)` }}
           >
             <div 
-              className="px-4 py-2 rounded-2xl text-[12px] font-bold border backdrop-blur-md"
+              className="px-4 py-2 rounded-2xl text-[12px] font-bold border backdrop-blur-md shadow-xl"
               style={{ 
                 backgroundColor: `${mascot.color}15`,
                 borderColor: `${mascot.color}50`,
@@ -167,7 +166,7 @@ export default function Mascot({ isUnderAttack, hasApt }) {
         )}
       </AnimatePresence>
 
-      {/* Cyber-Pet Mascot SVG container */}
+      {/* Shield Mascot SVG container */}
       <motion.div
         animate={
           state === 'alert' 
@@ -181,14 +180,14 @@ export default function Mascot({ isUnderAttack, hasApt }) {
             ? { duration: 3, repeat: Infinity, ease: 'easeInOut' } 
             : { duration: 0.5, repeat: Infinity }
         }
-        className="relative w-16 h-16 flex flex-col items-center justify-center"
+        className="relative w-16 h-20 flex flex-col items-center justify-center"
       >
         {/* Siren for APT */}
         <AnimatePresence>
           {state === 'apt' && (
             <motion.div 
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="absolute -top-4 w-4 h-3 bg-red-600 rounded-t-lg border-b-2 border-red-900 overflow-hidden"
+              className="absolute -top-3 w-4 h-3 bg-red-500 rounded-t-lg border-b-2 border-red-900 overflow-hidden z-20"
               style={{ boxShadow: '0 0 20px red' }}
             >
               <motion.div animate={{ x: ['-100%', '100%'] }} transition={{ duration: 0.4, repeat: Infinity, ease: 'linear' }} className="w-full h-full bg-white opacity-80" />
@@ -196,57 +195,68 @@ export default function Mascot({ isUnderAttack, hasApt }) {
           )}
         </AnimatePresence>
 
-        {/* Ears/Antennas */}
-        <div className="absolute top-0 w-full flex justify-between px-1.5 z-0">
+        {/* Floating Shield Bits (like tech armor) */}
+        <div className="absolute top-2 w-full flex justify-between px-0.5 z-0">
           <motion.div 
-            animate={state === 'happy' ? { rotate: [-15, 15, -15] } : { rotate: -45, y: 5 }} 
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-2 h-6 rounded-t-full origin-bottom border-2 border-slate-800"
-            style={{ backgroundColor: mascot.secondary }}
+            animate={state === 'happy' ? { y: [-2, 2, -2] } : { y: 5, x: 2, rotate: -20 }} 
+            transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
+            className="w-2 h-6 rounded-sm"
+            style={{ backgroundColor: mascot.secondary, boxShadow: `0 0 10px ${mascot.secondary}` }}
           />
           <motion.div 
-            animate={state === 'happy' ? { rotate: [15, -15, 15] } : { rotate: 45, y: 5 }} 
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-2 h-6 rounded-t-full origin-bottom border-2 border-slate-800"
-            style={{ backgroundColor: mascot.secondary }}
+            animate={state === 'happy' ? { y: [-2, 2, -2] } : { y: 5, x: -2, rotate: 20 }} 
+            transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
+            className="w-2 h-6 rounded-sm"
+            style={{ backgroundColor: mascot.secondary, boxShadow: `0 0 10px ${mascot.secondary}` }}
           />
         </div>
 
-        {/* Main Body */}
-        <div 
-          className="w-14 h-12 rounded-3xl relative z-10 flex flex-col items-center justify-center border-2 border-slate-800 overflow-hidden"
-          style={{ 
-            background: `linear-gradient(135deg, ${mascot.color}, ${mascot.secondary})`,
-            boxShadow: `0 0 25px ${mascot.glow}, inset -3px -3px 10px rgba(0,0,0,0.3), inset 3px 3px 10px rgba(255,255,255,0.4)`,
-          }}
+        {/* Main Shield Body (SVG Path) */}
+        <div className="relative z-10 w-14 h-16 drop-shadow-2xl flex flex-col items-center justify-start pt-3"
+          style={{ filter: `drop-shadow(0 0 15px ${mascot.glow})` }}
         >
-          {/* Screen Face */}
-          <div className="w-10 h-6 bg-cyan-50 border border-slate-800/20 rounded-xl mt-1 flex items-center justify-center px-1.5 overflow-hidden relative shadow-[inset_0_0_10px_rgba(0,0,0,0.2)]">
-            <div className="absolute inset-0 bg-slate-900 opacity-5 mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 1px, #000 1px, #000 2px)', backgroundSize: '100% 2px' }} />
+          <svg viewBox="0 0 100 120" className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={mascot.color} />
+                <stop offset="100%" stopColor={mascot.secondary} />
+              </linearGradient>
+              <linearGradient id="shieldInner" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.3)" />
+                <stop offset="100%" stopColor="rgba(0,0,0,0.3)" />
+              </linearGradient>
+            </defs>
+            {/* Outer metallic rim */}
+            <path d="M50,0 L95,15 C95,55 80,95 50,120 C20,95 5,55 5,15 Z" fill="url(#shieldGrad)" stroke="rgba(255,255,255,0.4)" strokeWidth="3" />
+            {/* Inner plate */}
+            <path d="M50,8 L87,20 C87,55 75,87 50,108 C25,87 13,55 13,20 Z" fill="url(#shieldInner)" stroke="rgba(0,0,0,0.2)" strokeWidth="2" />
+            {/* Glowing core line */}
+            <path d="M50,8 L50,108" stroke="rgba(255,255,255,0.5)" strokeWidth="2" />
+          </svg>
+
+          {/* Cute Shield Face */}
+          <div className="relative z-20 w-8 h-8 flex flex-col items-center">
             <Eyes />
             {/* Cute blush for happy state */}
             {state === 'happy' && (
-              <div className="absolute bottom-1 w-full flex justify-between px-0.5 opacity-60">
-                <div className="w-1.5 h-1 bg-pink-500 rounded-full blur-[1px]" />
-                <div className="w-1.5 h-1 bg-pink-500 rounded-full blur-[1px]" />
+              <div className="w-full flex justify-between px-0.5 mt-0.5 opacity-80">
+                <div className="w-2 h-1 bg-white/50 rounded-full blur-[1px]" />
+                <div className="w-2 h-1 bg-white/50 rounded-full blur-[1px]" />
               </div>
             )}
           </div>
         </div>
 
-        {/* Thruster Flame */}
-        <div className="absolute -bottom-4 w-6 flex justify-center -z-10">
+        {/* Hover Shadow / Thruster beneath the shield */}
+        <div className="absolute -bottom-3 w-8 flex justify-center -z-10">
           <motion.div 
             animate={{ 
-              height: state === 'alert' ? [15, 25, 15] : state === 'apt' ? [20, 35, 20] : [10, 15, 10],
-              opacity: [0.6, 1, 0.6]
+              width: state === 'alert' ? [20, 30, 20] : state === 'apt' ? [25, 40, 25] : [15, 20, 15],
+              opacity: [0.4, 0.8, 0.4]
             }} 
-            transition={{ duration: state === 'happy' ? 0.5 : 0.1, repeat: Infinity }}
-            className="w-4 rounded-b-full blur-[2px]"
-            style={{ 
-              background: `linear-gradient(to bottom, ${mascot.color}, transparent)`,
-              boxShadow: `0 0 15px ${mascot.color}`
-            }}
+            transition={{ duration: state === 'happy' ? 1.5 : 0.2, repeat: Infinity }}
+            className="h-2 rounded-[100%] blur-[3px]"
+            style={{ backgroundColor: mascot.color, boxShadow: `0 0 15px ${mascot.color}` }}
           />
         </div>
 
