@@ -13,6 +13,7 @@ import Analytics from './Analytics';
 import Settings from './Settings';
 import Endpoints from './Endpoints';
 import Mascot from './components/Mascot';
+import ChatbotModal from './components/ChatbotModal';
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || null);
@@ -21,6 +22,7 @@ export default function App() {
   const [flows, setFlows] = useState([]);
   const [threats, setThreats] = useState([]);
   const [blockedIPs, setBlockedIPs] = useState([]);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [endpoints, setEndpoints] = useState([
     { id: 'ATM-01', ip: '192.168.1.101', status: 'HEALTHY', events: [] },
     { id: 'ATM-02', ip: '192.168.1.102', status: 'HEALTHY', events: [] },
@@ -202,7 +204,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#060a13] text-slate-200 font-sans overflow-x-hidden relative">
-      <Mascot isUnderAttack={isAttack} hasApt={hasApt} />
+      <Mascot isUnderAttack={isAttack} hasApt={hasApt} onOpenChat={() => setIsChatOpen(true)} />
+      <ChatbotModal 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)} 
+        token={token}
+        initialContext={{
+          threats: threats.slice(-5),
+          endpoints: endpoints
+        }}
+      />
       <motion.div 
         animate={{ scale: [1, 1.3, 1], opacity: [0.12, 0.25, 0.12], x: [0, 30, 0] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}

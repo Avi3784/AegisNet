@@ -25,7 +25,7 @@ const MASCOT_STATES = {
   }
 };
 
-export default function Mascot({ isUnderAttack, hasApt }) {
+export default function Mascot({ isUnderAttack, hasApt, onOpenChat }) {
   const [posX, setPosX] = useState(80);
   const [direction, setDirection] = useState(1);
   const [currentMessage, setCurrentMessage] = useState('');
@@ -125,7 +125,9 @@ export default function Mascot({ isUnderAttack, hasApt }) {
 
   return (
     <motion.div
-      className="fixed bottom-6 z-50 select-none pointer-events-none"
+      className="fixed bottom-6 z-50 select-none cursor-pointer group"
+      onClick={onOpenChat}
+      whileHover={{ scale: 1.1 }}
       animate={{ 
         left: `${posX}%`,
         y: isJumping ? -30 : 0,
