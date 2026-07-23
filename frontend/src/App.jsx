@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldAlert, Server, Activity, Shield, FileText, BarChart2, LayoutDashboard, LogOut, Zap, Settings as SettingsIcon, Volume2, VolumeX } from 'lucide-react';
+import { ShieldAlert, Server, Activity, Shield, FileText, BarChart2, LayoutDashboard, LogOut, Zap, Settings as SettingsIcon, Volume2, VolumeX, BookOpen } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -14,6 +14,7 @@ import Settings from './Settings';
 import Endpoints from './Endpoints';
 import Mascot from './components/Mascot';
 import ChatbotModal from './components/ChatbotModal';
+import Documentation from './Documentation';
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || null);
@@ -311,6 +312,13 @@ export default function App() {
               >
                 <SettingsIcon size={16} /> Settings
               </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(6,182,212,0.3)' }}
+                onClick={() => setActiveTab('documentation')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${activeTab === 'documentation' ? 'bg-gradient-to-r from-cyan-600 to-blue-600 shadow-lg shadow-cyan-900/40 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+              >
+                <BookOpen size={16} /> Manual
+              </motion.button>
             </div>
             
             {role === 'admin' && (
@@ -489,8 +497,10 @@ export default function App() {
               onIsolate={(id) => setEndpoints(prev => prev.map(ep => ep.id === id ? { ...ep, status: 'ISOLATED' } : ep))}
               onReconnect={(id) => setEndpoints(prev => prev.map(ep => ep.id === id ? { ...ep, status: 'HEALTHY' } : ep))}
             />
-          ) : (
+          ) : activeTab === 'settings' ? (
             <Settings key="settings" token={token} />
+          ) : (
+            <Documentation key="documentation" />
           )}
         </AnimatePresence>
       </div>

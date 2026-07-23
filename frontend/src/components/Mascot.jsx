@@ -7,21 +7,21 @@ const MASCOT_STATES = {
     secondary: '#8b5cf6', // Violet
     glow: 'rgba(59, 130, 246, 0.5)',
     eyeStyle: 'happy', // ◕‿◕
-    message: ['I\'m your trusty Shield! uwu', 'Vault is secure! ✨', 'Standing guard...', 'No baddies in sight! 🚀', 'All systems protected!'],
+    message: ['Aegis Sentinel Active.', 'Network baseline stable.', 'Monitoring endpoints...', 'No anomalies detected.', 'All systems secured.'],
   },
   alert: {
     color: '#f97316', // Orange
     secondary: '#f59e0b', // Amber
     glow: 'rgba(249, 115, 22, 0.6)',
     eyeStyle: 'alert', // ⊙△⊙
-    message: ['Shield taking damage! 😰', 'Bracing for impact...', 'Who goes there?! 🚨', 'Defending the perimeter!'],
+    message: ['Anomalous traffic detected.', 'Investigating potential intrusion...', 'Elevated risk profile.', 'Reviewing endpoint telemetry.'],
   },
   apt: {
     color: '#ef4444', // Red
     secondary: '#b91c1c', // Dark red
     glow: 'rgba(239, 68, 68, 0.8)',
     eyeStyle: 'apt', // ✕‿✕
-    message: ['CRITICAL BREACH!! 💀', 'SHIELDS FAILING! 😱', 'Intruder alert! Call backup!', 'MAXIMUM DEFENSE ACTIVATED!'],
+    message: ['CRITICAL: APT Signature Matched.', 'DEFCON 1: Network Breach.', 'Executing defensive countermeasures.', 'Immediate isolation recommended.'],
   }
 };
 
