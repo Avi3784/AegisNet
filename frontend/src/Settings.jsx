@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, Cpu, ShieldCheck, Save, RefreshCw, Check, Zap, Sliders, 
-  Lock, Radio, CheckCircle2, AlertTriangle, Server, Activity
+  Lock, Radio, CheckCircle2, AlertTriangle, Server, Activity,
+  Power, Key, Database, Trash2
 } from 'lucide-react';
 
 export default function Settings({ token }) {
@@ -29,6 +30,11 @@ export default function Settings({ token }) {
     { id: 'pb3', title: 'Kill Unknown Processes in Temp', desc: 'Automatically terminates unverified executables launched from temporary directories.', active: false },
     { id: 'pb4', title: 'Suspend Suspicious Admin Logins', desc: 'Locks accounts exhibiting abnormal login behavior outside of business hours.', active: false },
   ]);
+
+  // Advanced Controls State
+  const [killSwitch, setKillSwitch] = useState(false);
+  const [sensitivity, setSensitivity] = useState(0.85);
+  const [retentionDays, setRetentionDays] = useState(30);
 
   const togglePlaybook = (id) => {
     setPlaybooks(prev => prev.map(pb => pb.id === id ? { ...pb, active: !pb.active } : pb));
@@ -122,6 +128,7 @@ export default function Settings({ token }) {
     { id: 'ml', label: 'Machine Learning', icon: Cpu, color: 'from-fuchsia-500 to-cyan-500' },
     { id: 'firewall', label: 'Firewall', icon: ShieldCheck, color: 'from-cyan-500 to-emerald-500' },
     { id: 'playbooks', label: 'Playbooks', icon: Zap, color: 'from-blue-500 to-indigo-500' },
+    { id: 'advanced', label: 'Advanced', icon: Power, color: 'from-rose-500 to-orange-500' },
   ];
 
   return (
@@ -488,6 +495,138 @@ export default function Settings({ token }) {
                   </button>
                 </div>
               ))}
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'advanced' && (
+          <motion.div
+            key="advanced"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            transition={{ duration: 0.2 }}
+            className="bg-[#0d1424]/80 backdrop-blur-xl border border-rose-500/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(244,63,94,0.1)] space-y-6"
+          >
+            <div className="border-b border-slate-800 pb-4">
+              <h3 className="text-lg font-black text-rose-500 flex items-center gap-2 uppercase tracking-wide">
+                <Power className="text-rose-500" size={20} />
+                God Mode Controls
+              </h3>
+              <p className="text-slate-400 text-xs mt-1">Extreme caution advised. These settings bypass normal operation.</p>
+            </div>
+
+            <div className="space-y-6">
+              {/* Kill Switch */}
+              <div className="bg-rose-950/20 border border-rose-900/50 p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-inner">
+                <div>
+                  <h4 className="text-base font-bold text-rose-400 flex items-center gap-2">
+                    <AlertTriangle size={18} /> Global Network Kill Switch
+                  </h4>
+                  <p className="text-xs text-rose-300/70 mt-1 max-w-md">
+                    Instantly block all ingress/egress traffic to the ATM fleet except management subnets. Triggers immediate DEFCON 1 protocol.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setKillSwitch(!killSwitch)}
+                  className={`relative px-6 py-3 rounded-xl font-black text-sm uppercase tracking-widest transition-all shadow-xl overflow-hidden ${
+                    killSwitch 
+                      ? 'bg-rose-600 text-white shadow-rose-900/50 border border-rose-400' 
+                      : 'bg-slate-900 text-slate-400 border border-slate-700 hover:border-rose-500/50'
+                  }`}
+                >
+                  {killSwitch && (
+                    <motion.div 
+                      className="absolute inset-0 bg-white opacity-20"
+                      animate={{ opacity: [0, 0.3, 0] }}
+                      transition={{ duration: 0.5, repeat: Infinity }}
+                    />
+                  )}
+                  {killSwitch ? 'LOCKDOWN ACTIVE' : 'ENGAGE LOCKDOWN'}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Sensitivity Slider */}
+                <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl">
+                  <h4 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <Activity size={16} className="text-amber-400" />
+                    Threat Sensitivity Threshold
+                  </h4>
+                  <p className="text-[11px] text-slate-400 mt-1 mb-4">Lower values flag more anomalies (higher false positives).</p>
+                  
+                  <div className="flex items-center gap-4">
+                    <input 
+                      type="range" 
+                      min="0.1" max="0.99" step="0.01" 
+                      value={sensitivity}
+                      onChange={(e) => setSensitivity(parseFloat(e.target.value))}
+                      className="w-full accent-amber-500"
+                    />
+                    <span className="font-mono text-amber-400 font-bold bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
+                      {sensitivity.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Data Retention */}
+                <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl">
+                  <h4 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <Database size={16} className="text-cyan-400" />
+                    Data Retention Policy
+                  </h4>
+                  <p className="text-[11px] text-slate-400 mt-1 mb-4">Automatically purge PCAP and flow logs after X days.</p>
+                  
+                  <div className="flex items-center gap-3">
+                    <select 
+                      value={retentionDays}
+                      onChange={(e) => setRetentionDays(parseInt(e.target.value))}
+                      className="bg-[#060a13] border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:border-cyan-500 outline-none"
+                    >
+                      <option value={7}>7 Days</option>
+                      <option value={30}>30 Days</option>
+                      <option value={90}>90 Days</option>
+                      <option value={365}>1 Year</option>
+                    </select>
+                    <button className="flex items-center gap-1.5 text-[11px] font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 px-3 py-2 rounded-lg border border-rose-500/20 transition-colors">
+                      <Trash2 size={12} /> Purge Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* RBAC */}
+              <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl">
+                <h4 className="text-sm font-bold text-slate-200 flex items-center gap-2 mb-4">
+                  <Key size={16} className="text-violet-400" />
+                  Access Control (RBAC)
+                </h4>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between bg-[#060a13] border border-slate-800 p-3 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-violet-500/20 flex items-center justify-center border border-violet-500/30 text-violet-400 font-bold text-xs">S1</div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-200">System Admin</p>
+                        <p className="text-[10px] text-emerald-400">Current Session</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] px-2 py-1 bg-slate-800 rounded text-slate-400">Full Access</span>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-[#060a13] border border-slate-800 p-3 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700 text-slate-400 font-bold text-xs">T1</div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-200">API Key: SIEM Integration</p>
+                        <p className="text-[10px] text-slate-500">Last used: 2 mins ago</p>
+                      </div>
+                    </div>
+                    <button className="text-[10px] px-3 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded font-bold hover:bg-rose-500/20 transition-colors">Revoke</button>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </motion.div>
         )}
