@@ -145,26 +145,46 @@ ATTACKS = [
 ]
 
 
+def fire_attack(attack):
+    label = attack["attack_type"]
+    print(f"\n[->] Firing: {label}  ({attack['src_ip']} -> {attack['dst_ip']}:{int(attack['features']['destination_port'])})")
+    try:
+        resp = httpx.post(API_URL, json=attack, timeout=30.0)
+        resp.raise_for_status()
+        data = resp.json()
+        verdict = "[ATTACK]" if data["prediction"] == 1 else "[NORMAL]"
+        print(f"    Model Verdict : {verdict}")
+        print(f"    LLM Engaged   : Yes -- check the dashboard!")
+    except Exception as e:
+        print(f"    ERROR: {e}")
+
 def fire():
-    print("\nAegisNet Threat Injector\n" + "="*40)
-    for attack in ATTACKS:
-        label = attack["attack_type"]
-        print(f"\n[->] Firing: {label}  ({attack['src_ip']} -> {attack['dst_ip']}:{int(attack['features']['destination_port'])})")
-        try:
-            resp = httpx.post(API_URL, json=attack, timeout=30.0)
-            resp.raise_for_status()
-            data = resp.json()
-            verdict = "[ATTACK]" if data["prediction"] == 1 else "[NORMAL]"
-            print(f"    Model Verdict : {verdict}")
-            print(f"    LLM Engaged   : Yes -- check the dashboard!")
-        except Exception as e:
-            print(f"    ERROR: {e}")
+    print("\n" + "="*45)
+    print(" 🛡️ AegisNet Interactive Threat Injector 🛡️")
+    print("="*45)
+    
+    while True:
+        print("\nSelect an attack to fire:")
+        for i, attack in enumerate(ATTACKS):
+            print(f"  [{i+1}] {attack['attack_type']}")
+        print("  [A] Fire ALL attacks sequentially (4s interval)")
+        print("  [Q] Quit")
         
-        time.sleep(4)   # Wait 4s between attacks (respects LLM rate limit of 2.5s)
-
-    print("\n" + "="*40)
-    print("All attacks fired! Check http://localhost:5174")
-
+        choice = input("\nEnter choice (1-5, A, Q): ").strip().upper()
+        
+        if choice == 'Q':
+            print("Exiting Threat Injector...")
+            break
+        elif choice == 'A':
+            for attack in ATTACKS:
+                fire_attack(attack)
+                time.sleep(4)
+            print("\nAll attacks fired! Check the dashboard.")
+        elif choice.isdigit() and 1 <= int(choice) <= len(ATTACKS):
+            attack = ATTACKS[int(choice) - 1]
+            fire_attack(attack)
+        else:
+            print("Invalid choice, please try again.")
 
 if __name__ == "__main__":
     fire()
