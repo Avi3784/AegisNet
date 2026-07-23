@@ -149,7 +149,7 @@ def fire():
     print("\nAegisNet Threat Injector\n" + "="*40)
     for attack in ATTACKS:
         label = attack["attack_type"]
-        print(f"\n[→] Firing: {label}  ({attack['src_ip']} → {attack['dst_ip']}:{int(attack['features']['destination_port'])})")
+        print(f"\n[->] Firing: {label}  ({attack['src_ip']} -> {attack['dst_ip']}:{int(attack['features']['destination_port'])})")
         try:
             resp = httpx.post(API_URL, json=attack, timeout=30.0)
             resp.raise_for_status()

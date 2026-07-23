@@ -1,0 +1,5 @@
+destination_port,flow_duration,total_fwd_packets,total_bwd_packets,total_fwd_bytes,total_bwd_bytes,fwd_packet_length_max,fwd_packet_length_mean,bwd_packet_length_max,bwd_packet_length_mean,flow_bytes_per_sec,flow_packets_per_sec,flow_iat_mean,down_up_ratio,syn_flag_count,ack_flag_count,fin_flag_count,rst_flag_count,psh_flag_count
+80,500000.0,4,2,176,97,56,44.0,57,48.5,546.0,12.0,100000.0,0.5,2,4,1,0,2
+443,779999.9713897705,40,0,1600,0,40,40.0,0,0.0,2051.282126522631,51.28205316306578,19999.99926640437,0.0,40,0,0,0,0
+8080,0.0,1,0,40,0,40,40.0,0,0.0,inf,inf,0.0,0.0,0,1,0,0,0
+30000,0.0,1,0,40,0,40,40.0,0,0.0,inf,inf,0.0,0.0,0,1,0,0,0

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldAlert, Server, Activity, Shield, FileText, BarChart2, LayoutDashboard, LogOut, Zap, Settings as SettingsIcon } from 'lucide-react';
+import { ShieldAlert, Server, Activity, Shield, FileText, BarChart2, LayoutDashboard, LogOut, Zap, Settings as SettingsIcon, Volume2, VolumeX } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -29,6 +29,38 @@ export default function App() {
   const [status, setStatus] = useState('connecting');
   const [stats, setStats] = useState({ totalFlows: 0, threatCount: 0, blockedCount: 0 });
   const wsRef = useRef(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const isMutedRef = useRef(isMuted);
+  const audioCtxRef = useRef(null);
+
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
+
+  const playThreatAlert = () => {
+    if (isMutedRef.current) return;
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const ctx = audioCtxRef.current;
+    if (ctx.state === 'suspended') ctx.resume();
+    
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+    
+    gainNode.gain.setValueAtTime(0, ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
+    gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.2);
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -83,6 +115,9 @@ export default function App() {
               return updated.length > 100 ? updated.slice(updated.length - 100) : updated;
             });
             setStats(s => ({ ...s, threatCount: s.threatCount + 1 }));
+            if (data.attack_type && (data.attack_type.includes('APT') || data.attack_type.includes('OSINT'))) {
+              playThreatAlert();
+            }
           } else if (data.type === 'block') {
             setBlockedIPs((prev) => {
               const exists = prev.some(b => b.ip === data.ip);
@@ -214,6 +249,14 @@ export default function App() {
               />
               <span className="text-slate-400">{status === 'connected' ? 'Live' : 'Reconnecting...'}</span>
             </div>
+
+            <button 
+              onClick={() => setIsMuted(!isMuted)} 
+              className="p-1.5 rounded-full bg-[#0d1424]/80 border border-slate-700/40 text-slate-400 hover:text-slate-200 transition-colors"
+              title={isMuted ? "Unmute Threat Alerts" : "Mute Threat Alerts"}
+            >
+              {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            </button>
 
             <div className="flex bg-[#0d1424]/80 rounded-xl p-1 border border-slate-700/30 backdrop-blur">
               <motion.button 

