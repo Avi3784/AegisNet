@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ShieldAlert, Server, Activity, Shield, FileText, BarChart2, LayoutDashboard, LogOut, Zap, Settings as SettingsIcon, Volume2, VolumeX } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import StatsOverview from './components/StatsOverview';
@@ -193,10 +193,22 @@ export default function App() {
 
   const safeNumber = (val) => (typeof val === 'number' && !isNaN(val)) ? val : 0;
   
-  const chartData = flows.map((f, i) => ({
-    time: i,
-    val: safeNumber(f.flow?.prediction) === 1 ? 1 : 0
-  }));
+  let currentIntensity = 0;
+  const chartData = flows.map((f, i) => {
+    const isThreat = safeNumber(f.flow?.prediction) === 1;
+    if (isThreat) {
+      currentIntensity = 100;
+    } else {
+      // Exponential decay + small baseline jitter
+      currentIntensity = Math.max(0, currentIntensity * 0.85);
+      if (currentIntensity < 5) currentIntensity = Math.random() * 8 + 2; 
+    }
+    return {
+      time: i,
+      intensity: currentIntensity.toFixed(1),
+      status: isThreat ? "ATTACK" : "NORMAL"
+    };
+  });
 
   const latestThreat = threats.length > 0 ? threats[threats.length - 1] : null;
   const isAttack = flows.length > 0 && flows[flows.length - 1].flow?.prediction === 1;
@@ -360,15 +372,40 @@ export default function App() {
                         {isAttack ? 'THREAT ACTIVE' : 'ALL CLEAR'}
                       </span>
                     </div>
-                    <div className="flex-1 w-full">
+                    <div className="flex-1 w-full mt-4">
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData}>
+                        <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorIntensity" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={isAttack ? "#ef4444" : "#8b5cf6"} stopOpacity={0.8}/>
+                              <stop offset="95%" stopColor={isAttack ? "#ef4444" : "#8b5cf6"} stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
                           <XAxis dataKey="time" hide />
-                          <YAxis domain={[-0.1, 1.1]} ticks={[0, 1]} tickFormatter={v => v===1 ? "ATTACK" : "NORMAL"} stroke="#475569" tick={{fill: '#94a3b8', fontSize: 10}} width={60} />
-                          <Tooltip contentStyle={{backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px'}} itemStyle={{color: '#a78bfa'}} />
-                          <Line type="stepAfter" dataKey="val" stroke={isAttack ? "#f43f5e" : "#8b5cf6"} strokeWidth={2} dot={false} isAnimationActive={false} />
-                        </LineChart>
+                          <YAxis 
+                            domain={[0, 100]} 
+                            stroke="#475569" 
+                            tick={{fill: '#94a3b8', fontSize: 10}} 
+                            width={50} 
+                            tickFormatter={(v) => `${v}%`}
+                          />
+                          <Tooltip 
+                            contentStyle={{backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px'}} 
+                            itemStyle={{color: '#e2e8f0', fontWeight: 'bold'}} 
+                            labelStyle={{display: 'none'}}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="intensity" 
+                            stroke={isAttack ? "#ef4444" : "#a855f7"} 
+                            strokeWidth={3} 
+                            fillOpacity={1} 
+                            fill="url(#colorIntensity)" 
+                            isAnimationActive={true}
+                            animationDuration={300}
+                          />
+                        </AreaChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
