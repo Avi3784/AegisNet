@@ -12,6 +12,7 @@ import AuthPage from './Auth';
 import Analytics from './Analytics';
 import Settings from './Settings';
 import Endpoints from './Endpoints';
+import Mascot from './components/Mascot';
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || null);
@@ -201,7 +202,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#060a13] text-slate-200 font-sans overflow-x-hidden relative">
-      {/* Animated background orbs - vibrant */}
+      <Mascot isUnderAttack={isAttack} hasApt={hasApt} />
       <motion.div 
         animate={{ scale: [1, 1.3, 1], opacity: [0.12, 0.25, 0.12], x: [0, 30, 0] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
