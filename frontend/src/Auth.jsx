@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Lock, User, Loader2 } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from "jwt-decode";
 
 const AuthPage = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -36,6 +38,18 @@ const AuthPage = ({ onLogin }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = (credentialResponse) => {
+    const decoded = jwtDecode(credentialResponse.credential);
+    // In a real application, you'd send this token to the backend for verification
+    // and receive a session token. For this demo, we'll log them in directly
+    // based on Google verification.
+    onLogin(credentialResponse.credential, 'admin'); // Assuming Google login = admin for demo
+  };
+
+  const handleGoogleError = () => {
+    setError('Google Authentication Failed');
   };
 
   return (
@@ -135,14 +149,32 @@ const AuthPage = ({ onLogin }) => {
             )}
           </AnimatePresence>
 
-          <motion.button 
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-violet-600 via-fuchsia-600 to-cyan-600 hover:from-violet-500 hover:via-fuchsia-500 hover:to-cyan-500 text-white font-bold py-3 rounded-lg shadow-lg shadow-violet-900/50 flex justify-center items-center gap-2 transition-all"
-          >
-            {loading ? <Loader2 className="animate-spin" size={20} /> : 'AUTHENTICATE'}
-          </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-violet-600 via-fuchsia-600 to-cyan-600 hover:from-violet-500 hover:via-fuchsia-500 hover:to-cyan-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-violet-500/25 flex items-center justify-center gap-2 mt-6 disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="animate-spin" size={20} /> : <><Lock size={18} /> Authenticate</>}
+            </motion.button>
         </form>
+
+        <div className="mt-6 flex flex-col items-center">
+          <div className="flex items-center gap-4 w-full mb-6">
+            <div className="flex-1 h-px bg-slate-800" />
+            <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Enterprise SSO</span>
+            <div className="flex-1 h-px bg-slate-800" />
+          </div>
+          
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            useOneTap
+            theme="filled_black"
+            shape="rectangular"
+            text="continue_with"
+          />
+        </div>
       </motion.div>
     </div>
   );

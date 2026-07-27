@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Clock, MessageSquareText, Download } from 'lucide-react';
+import anime from 'animejs';
 import ChatbotModal from './ChatbotModal';
 
 const ThreatTimeline = ({ threats, token }) => {
@@ -21,6 +22,27 @@ const ThreatTimeline = ({ threats, token }) => {
     groupedThreats.push({ ...current, count: 1 });
   }
 
+  const listRef = useRef(null);
+
+  useEffect(() => {
+    if (groupedThreats.length > 0 && listRef.current) {
+      const newItems = listRef.current.querySelectorAll('.threat-card:not(.animated)');
+      if (newItems.length > 0) {
+        anime({
+          targets: newItems,
+          translateX: [-50, 0],
+          opacity: [0, 1],
+          delay: anime.stagger(100),
+          easing: 'easeOutElastic(1, .8)',
+          duration: 800,
+          begin: () => {
+            newItems.forEach(el => el.classList.add('animated'));
+          }
+        });
+      }
+    }
+  }, [groupedThreats.length]);
+
   return (
     <div className="bg-[#0d1424]/80 backdrop-blur-xl border border-slate-700/30 rounded-2xl p-4 flex flex-col h-[400px]" style={{ boxShadow: '0 0 30px rgba(244,63,94,0.04)' }}>
       <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-700/30">
@@ -38,7 +60,7 @@ const ThreatTimeline = ({ threats, token }) => {
         </span>
       </div>
       
-      <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+      <div ref={listRef} className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
         <AnimatePresence initial={false}>
           {groupedThreats.length === 0 ? (
             <div className="h-full flex items-center justify-center text-slate-500 text-sm">
@@ -48,9 +70,8 @@ const ThreatTimeline = ({ threats, token }) => {
             groupedThreats.map((threat, idx) => (
               <motion.div
                 key={threat.timestamp + idx}
-                initial={{ opacity: 0, x: -20, height: 0 }}
-                animate={{ opacity: 1, x: 0, height: 'auto' }}
-                className="bg-slate-800/40 border-l-4 border-rose-500 rounded-r-xl p-3 shadow-lg flex flex-col gap-2 hover:bg-slate-800/60 transition-colors"
+                layout
+                className="threat-card bg-slate-800/40 border-l-4 border-rose-500 rounded-r-xl p-3 shadow-lg flex flex-col gap-2 hover:bg-slate-800/60 transition-colors opacity-0"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-2">

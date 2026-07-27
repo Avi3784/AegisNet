@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldAlert, Server, Activity, Shield, FileText, BarChart2, LayoutDashboard, LogOut, Zap, Settings as SettingsIcon, Volume2, VolumeX, BookOpen } from 'lucide-react';
+import { ShieldAlert, Server, Activity, Shield, FileText, BarChart2, LayoutDashboard, LogOut, Zap, Settings as SettingsIcon, BookOpen, HelpCircle } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -14,7 +14,8 @@ import Settings from './Settings';
 import Endpoints from './Endpoints';
 import Mascot from './components/Mascot';
 import ChatbotModal from './components/ChatbotModal';
-import Documentation from './Documentation';
+import HelpModal from './components/HelpModal';
+import AnimeBackground from './components/AnimeBackground';
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || null);
@@ -24,6 +25,7 @@ export default function App() {
   const [threats, setThreats] = useState([]);
   const [blockedIPs, setBlockedIPs] = useState([]);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [endpoints, setEndpoints] = useState([
     { id: 'ATM-01', ip: '192.168.1.101', status: 'HEALTHY', events: [] },
     { id: 'ATM-02', ip: '192.168.1.102', status: 'HEALTHY', events: [] },
@@ -33,38 +35,6 @@ export default function App() {
   const [status, setStatus] = useState('connecting');
   const [stats, setStats] = useState({ totalFlows: 0, threatCount: 0, blockedCount: 0 });
   const wsRef = useRef(null);
-  const [isMuted, setIsMuted] = useState(false);
-  const isMutedRef = useRef(isMuted);
-  const audioCtxRef = useRef(null);
-
-  useEffect(() => {
-    isMutedRef.current = isMuted;
-  }, [isMuted]);
-
-  const playThreatAlert = () => {
-    if (isMutedRef.current) return;
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    const ctx = audioCtxRef.current;
-    if (ctx.state === 'suspended') ctx.resume();
-    
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-    
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(800, ctx.currentTime);
-    
-    gainNode.gain.setValueAtTime(0, ctx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
-    gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
-    
-    oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.2);
-  };
 
   useEffect(() => {
     if (!token) return;
@@ -114,14 +84,8 @@ export default function App() {
             });
             setStats(s => ({ ...s, totalFlows: s.totalFlows + 1 }));
           } else if (data.type === 'threat') {
-            setThreats((prev) => {
-              const updated = [...prev, data];
-              return updated.length > 100 ? updated.slice(updated.length - 100) : updated;
-            });
+            setThreats(prev => [...prev.slice(-49), data]);
             setStats(s => ({ ...s, threatCount: s.threatCount + 1 }));
-            if (data.attack_type && (data.attack_type.includes('APT') || data.attack_type.includes('OSINT'))) {
-              playThreatAlert();
-            }
           } else if (data.type === 'block') {
             setBlockedIPs((prev) => {
               const exists = prev.some(b => b.ip === data.ip);
@@ -178,7 +142,7 @@ export default function App() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'AegisNet_Audit_Report.pdf';
+      a.download = 'AegisNet_Executive_Report.pdf';
       a.click();
     } catch (e) { alert(e.message); }
   };
@@ -213,7 +177,8 @@ export default function App() {
 
   const latestThreat = threats.length > 0 ? threats[threats.length - 1] : null;
   const isAttack = flows.length > 0 && flows[flows.length - 1].flow?.prediction === 1;
-  const hasApt = threats.some(t => JSON.stringify(t).includes('APT')) || flows.some(f => JSON.stringify(f).includes('APT'));
+  const now = Date.now();
+  const hasApt = latestThreat && JSON.stringify(latestThreat).includes('APT') && (now - latestThreat.timestamp < 15000);
 
   return (
     <div className="min-h-screen bg-[#060a13] text-slate-200 font-sans overflow-x-hidden relative">
@@ -227,6 +192,12 @@ export default function App() {
           endpoints: endpoints
         }}
       />
+      <HelpModal 
+        isOpen={isHelpOpen} 
+        onClose={() => setIsHelpOpen(false)} 
+        activeTab={activeTab} 
+      />
+      <AnimeBackground isAttack={isAttack} hasApt={hasApt} />
       <motion.div 
         animate={{ scale: [1, 1.3, 1], opacity: [0.12, 0.25, 0.12], x: [0, 30, 0] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
@@ -275,14 +246,6 @@ export default function App() {
               <span className="text-slate-400">{status === 'connected' ? 'Live' : 'Reconnecting...'}</span>
             </div>
 
-            <button 
-              onClick={() => setIsMuted(!isMuted)} 
-              className="p-1.5 rounded-full bg-[#0d1424]/80 border border-slate-700/40 text-slate-400 hover:text-slate-200 transition-colors"
-              title={isMuted ? "Unmute Threat Alerts" : "Mute Threat Alerts"}
-            >
-              {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-            </button>
-
             <div className="flex bg-[#0d1424]/80 rounded-xl p-1 border border-slate-700/30 backdrop-blur">
               <motion.button 
                 whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(139,92,246,0.3)' }}
@@ -312,13 +275,6 @@ export default function App() {
               >
                 <SettingsIcon size={16} /> Settings
               </motion.button>
-              <motion.button 
-                whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(6,182,212,0.3)' }}
-                onClick={() => setActiveTab('documentation')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${activeTab === 'documentation' ? 'bg-gradient-to-r from-cyan-600 to-blue-600 shadow-lg shadow-cyan-900/40 text-white' : 'text-slate-400 hover:text-slate-200'}`}
-              >
-                <BookOpen size={16} /> Manual
-              </motion.button>
             </div>
             
             {role === 'admin' && (
@@ -332,6 +288,15 @@ export default function App() {
                 Audit PDF
               </motion.button>
             )}
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsHelpOpen(true)}
+              className="flex items-center gap-2 bg-blue-900/30 hover:bg-blue-800/40 border border-blue-500/30 text-blue-400 px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+            >
+              <HelpCircle size={16} /> Help?
+            </motion.button>
             
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -497,10 +462,8 @@ export default function App() {
               onIsolate={(id) => setEndpoints(prev => prev.map(ep => ep.id === id ? { ...ep, status: 'ISOLATED' } : ep))}
               onReconnect={(id) => setEndpoints(prev => prev.map(ep => ep.id === id ? { ...ep, status: 'HEALTHY' } : ep))}
             />
-          ) : activeTab === 'settings' ? (
-            <Settings key="settings" token={token} />
           ) : (
-            <Documentation key="documentation" />
+            <Settings key="settings" token={token} />
           )}
         </AnimatePresence>
       </div>

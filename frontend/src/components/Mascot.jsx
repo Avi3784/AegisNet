@@ -26,47 +26,12 @@ const MASCOT_STATES = {
 };
 
 export default function Mascot({ isUnderAttack, hasApt, onOpenChat }) {
-  const [posX, setPosX] = useState(80);
-  const [direction, setDirection] = useState(1);
   const [currentMessage, setCurrentMessage] = useState('');
   const [showMessage, setShowMessage] = useState(false);
-  const [isJumping, setIsJumping] = useState(false);
-  const intervalRef = useRef(null);
   const messageTimeoutRef = useRef(null);
 
   const state = hasApt ? 'apt' : isUnderAttack ? 'alert' : 'happy';
   const mascot = MASCOT_STATES[state];
-
-  // Roaming movement
-  useEffect(() => {
-    if (state !== 'happy') return;
-    
-    intervalRef.current = setInterval(() => {
-      setPosX(prev => {
-        const newPos = prev + direction * (Math.random() * 3 + 1);
-        if (newPos > 85) { setDirection(-1); return 84; }
-        if (newPos < 5) { setDirection(1); return 6; }
-        return newPos;
-      });
-    }, 100);
-    
-    return () => clearInterval(intervalRef.current);
-  }, [direction, state]);
-
-  // Scared - run to corner
-  useEffect(() => {
-    if (state === 'alert') {
-      clearInterval(intervalRef.current);
-      setPosX(92);
-      setIsJumping(true);
-      setTimeout(() => setIsJumping(false), 500);
-    } else if (state === 'apt') {
-      clearInterval(intervalRef.current);
-      setPosX(5);
-      setIsJumping(true);
-      setTimeout(() => setIsJumping(false), 500);
-    }
-  }, [state]);
 
   // Periodic messages
   useEffect(() => {
@@ -78,7 +43,7 @@ export default function Mascot({ isUnderAttack, hasApt, onOpenChat }) {
     };
 
     showRandomMessage();
-    const msgInterval = setInterval(showRandomMessage, state === 'happy' ? 8000 : 4000);
+    const msgInterval = setInterval(showRandomMessage, state === 'happy' ? 15000 : 8000);
     
     return () => {
       clearInterval(msgInterval);
@@ -86,15 +51,8 @@ export default function Mascot({ isUnderAttack, hasApt, onOpenChat }) {
     };
   }, [state]);
 
-  // Random jump when happy
-  useEffect(() => {
-    if (state !== 'happy') return;
-    const jumpInterval = setInterval(() => {
-      setIsJumping(true);
-      setTimeout(() => setIsJumping(false), 400);
-    }, 5000);
-    return () => clearInterval(jumpInterval);
-  }, [state]);
+  // No jump
+
 
   // Eye component based on state
   const Eyes = () => {
@@ -125,18 +83,9 @@ export default function Mascot({ isUnderAttack, hasApt, onOpenChat }) {
 
   return (
     <motion.div
-      className="fixed bottom-6 z-50 select-none cursor-pointer group"
+      className="fixed bottom-6 left-24 z-50 select-none cursor-pointer group"
       onClick={onOpenChat}
       whileHover={{ scale: 1.1 }}
-      animate={{ 
-        left: `${posX}%`,
-        y: isJumping ? -30 : 0,
-      }}
-      transition={{ 
-        left: { type: 'spring', stiffness: 50, damping: 20 },
-        y: { type: 'spring', stiffness: 300, damping: 10 },
-      }}
-      style={{ transform: `scaleX(${direction})` }}
     >
       {/* Speech bubble */}
       <AnimatePresence>
@@ -147,15 +96,16 @@ export default function Mascot({ isUnderAttack, hasApt, onOpenChat }) {
             exit={{ opacity: 0, y: -5, scale: 0.8 }}
             transition={{ duration: 0.3 }}
             className="absolute bottom-[110%] mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap"
-            style={{ transform: `scaleX(${direction}) translateX(-50%)` }}
           >
             <div 
-              className="px-4 py-2 rounded-2xl text-[12px] font-bold border backdrop-blur-md shadow-xl"
+              className="px-4 py-3 rounded-2xl text-[12px] font-bold border backdrop-blur-md shadow-xl w-48 text-center"
               style={{ 
                 backgroundColor: `${mascot.color}15`,
                 borderColor: `${mascot.color}50`,
                 color: mascot.color,
                 boxShadow: `0 0 20px ${mascot.glow}`,
+                whiteSpace: 'normal',
+                wordWrap: 'break-word'
               }}
             >
               {currentMessage}

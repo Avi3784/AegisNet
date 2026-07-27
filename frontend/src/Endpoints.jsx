@@ -67,8 +67,30 @@ const EndpointCard = ({ ep, onIsolate, onReconnect, handleSandboxDetonate, isHon
     show: { opacity: 1, x: 0 }
   };
 
+  const glitchVariants = {
+    normal: { x: 0, y: 0, opacity: 1, filter: "hue-rotate(0deg)" },
+    isolated: {
+      x: [0, -5, 5, -5, 5, 0],
+      y: [0, 2, -2, 2, -2, 0],
+      opacity: [1, 0.8, 1, 0.9, 1],
+      filter: ["hue-rotate(0deg)", "hue-rotate(90deg)", "hue-rotate(-90deg)", "hue-rotate(0deg)"],
+      transition: { duration: 0.4, repeat: Infinity, repeatDelay: 2 }
+    }
+  };
+
+  const healthyPulse = {
+    normal: { scale: 1 },
+    pulse: {
+      scale: [1, 1.02, 1],
+      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+    }
+  };
+
   return (
-    <div className={`relative bg-[#0d1424]/80 backdrop-blur-xl border rounded-2xl p-4 flex flex-col h-[28rem] transition-colors ${
+    <motion.div 
+      variants={ep.status === 'ISOLATED' ? glitchVariants : healthyPulse}
+      animate={ep.status === 'ISOLATED' ? 'isolated' : 'pulse'}
+      className={`relative bg-[#0d1424]/80 backdrop-blur-xl border rounded-2xl p-4 flex flex-col h-[28rem] transition-colors ${
       isHoneypotTriggered ? 'animate-pulse border-rose-500 shadow-rose-900/50 bg-rose-950/20 shadow-lg' 
       : isHoneypot ? 'border-dashed border-slate-600/50 opacity-80 shadow-lg'
       : ep.status === 'ISOLATED' ? 'border-rose-500/50 shadow-rose-900/20 shadow-lg' : 'glow-border shadow-[0_0_25px_rgba(139,92,246,0.2)]'
@@ -170,7 +192,7 @@ const EndpointCard = ({ ep, onIsolate, onReconnect, handleSandboxDetonate, isHon
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

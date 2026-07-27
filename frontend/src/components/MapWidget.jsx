@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
+import anime from 'animejs';
 
 // List of real global cities (Lat, Lng) to ensure markers land on landmasses
 const GLOBAL_CITIES = [
@@ -34,12 +35,50 @@ const getCoordsFromIP = (ip) => {
 
 const MapWidget = ({ threats }) => {
   const [mapThreats, setMapThreats] = useState([]);
+  const svgRef = useRef(null);
 
   useEffect(() => {
     setMapThreats(threats.map(t => ({
       ...t,
       coords: getCoordsFromIP(t.flow?.src_ip || t.ip || "1.1.1.1")
     })));
+
+    // Fire laser animation when new threat arrives
+    if (threats.length > 0 && svgRef.current) {
+      const isApt = threats[threats.length - 1].attack_type?.includes('[OSINT: APT DETECTED]');
+      const color = isApt ? '#d946ef' : '#f43f5e';
+      
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      
+      const startX = Math.random() > 0.5 ? 0 : 500;
+      const startY = Math.random() * 300;
+      const endX = 250;
+      const endY = 150;
+      const cx = (startX + endX) / 2 + (Math.random() * 100 - 50);
+      const cy = (startY + endY) / 2 - 100;
+      
+      path.setAttribute("d", `M ${startX} ${startY} Q ${cx} ${cy} ${endX} ${endY}`);
+      path.setAttribute("fill", "transparent");
+      path.setAttribute("stroke", color);
+      path.setAttribute("stroke-width", isApt ? "4" : "2");
+      path.setAttribute("stroke-linecap", "round");
+      path.style.filter = `drop-shadow(0 0 8px ${color})`;
+      
+      svgRef.current.appendChild(path);
+
+      anime({
+        targets: path,
+        strokeDashoffset: [anime.setDashoffset, 0],
+        easing: 'easeInOutSine',
+        duration: 800,
+        direction: 'alternate',
+        complete: () => {
+          if (svgRef.current && path.parentNode) {
+            svgRef.current.removeChild(path);
+          }
+        }
+      });
+    }
   }, [threats]);
 
   return (
@@ -60,6 +99,13 @@ const MapWidget = ({ threats }) => {
       </div>
       
       <div className="flex-1 rounded-xl overflow-hidden border border-slate-700/30 relative z-0">
+        {/* SVG Laser Overlay */}
+        <svg 
+          ref={svgRef}
+          className="absolute inset-0 w-full h-full pointer-events-none z-[400]" 
+          viewBox="0 0 500 300"
+          preserveAspectRatio="none"
+        />
         <MapContainer center={[20, 0]} zoom={2} scrollWheelZoom={false} style={{ height: '100%', width: '100%', backgroundColor: '#060a13' }}>
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"

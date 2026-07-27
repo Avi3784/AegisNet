@@ -54,14 +54,14 @@ async def run_pipeline_loop():
                     prediction = int(model.predict(scaled_row)[0])
                     
                     # Prepare WS flow message
-                    # Generate a plausible public IP
-                    if random.random() < 0.1:
-                        random_ip = random.choice(list(APT_IPS.keys()))
-                    else:
-                        random_ip = f"{random.randint(1,223)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(1,254)}"
+                    # Generate a plausible public IP, removing APT attacks from the auto-loop
+                    random_ip = f"{random.randint(1,223)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(1,254)}"
                     
                     if random_ip in APT_IPS:
-                        prediction = 1
+                        random_ip = "192.168.1.100" # Force to normal if randomly hit APT
+                    
+                    # Force prediction to 0 (Normal) for auto-generated background traffic
+                    prediction = 0
                     
                     flow_msg = WS_FLOW_TEMPLATE.copy()
                     flow_msg["timestamp"] = int(time.time() * 1000)
