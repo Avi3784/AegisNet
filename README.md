@@ -84,7 +84,17 @@ AEGISNET_SECRET_KEY=
 
 A Kaggle token is optional unless you use the dataset download script. Generate a new token and keep it only in your local environment. Any credential previously committed to Git history must be revoked/rotated; deleting it from the latest file does not erase it from old commits.
 
-Set `AEGISNET_ADMIN_PASSWORD` before the first database initialization if you want the application to bootstrap its initial admin account. Set `AEGISNET_SECRET_KEY` to a long, random secret before using authentication. The API can start in demo mode when trained model artifacts are absent. Demo mode must be visibly distinguished from model-backed inference.
+Set `AEGISNET_ADMIN_PASSWORD` before the first database initialization if you want the application to bootstrap its initial admin account. Set `AEGISNET_SECRET_KEY` to a long, random secret before using authentication. ### Prepare data and train the static pathway
+
+```bash
+# Requires source CICIDS2017 CSV files in data/raw/, or a configured Kaggle token
+python -m src.ml.prepare_dataset
+python -m src.ml.train_model
+```
+
+The training entry point currently trains the XGBoost static pathway and writes `models/ensemble_model.pkl`, `models/scaler.pkl`, and `models/metrics.json`. The filename `ensemble_model.pkl` is retained for backend compatibility; the current artifact is an XGBoost classifier, not a voting ensemble. This does not implement the Bi-LSTM/VAE pathway or late fusion.
+
+The API can start in demo mode when trained model artifacts are absent. Demo mode must be visibly distinguished from model-backed inference.
 
 ## Repository map
 
