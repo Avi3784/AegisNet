@@ -100,7 +100,7 @@ export default function App() {
                 if (ep.id === data.endpointId || (!data.endpointId && ep.id === 'ATM-01')) {
                   return {
                     ...ep,
-                    events: [...ep.events, data.command]
+                    events: [...ep.events, data.synthetic ? `[SIMULATED] ${data.command}` : data.command]
                   };
                 }
                 return ep;
@@ -231,7 +231,7 @@ export default function App() {
               <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 tracking-tight">
                 AegisNet
               </h1>
-              <p className="text-slate-400 text-sm font-medium tracking-wider uppercase">ATM Network Fraud Defense</p>
+              <p className="text-slate-400 text-sm font-medium tracking-wider uppercase">Hybrid Network Intrusion Detection</p>
             </div>
           </div>
           
