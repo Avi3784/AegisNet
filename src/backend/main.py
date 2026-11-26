@@ -157,7 +157,7 @@ async def inject_threat(payload: dict, current_user: dict = Depends(require_admi
     Expects: { "attack_type": str, "features": { <19 feature cols> } }
     Bypasses the CSV loop — useful for live threat testing.
     """
-    attack_type = payload.get("attack_type", "Synthetic Attack")
+    attack_type = f"SYNTHETIC TEST: {payload.get('attack_type', 'Test scenario')}"
     features = payload.get("features", {})
 
     # Sanitize — replace Inf with large number
@@ -197,6 +197,8 @@ async def inject_threat(payload: dict, current_user: dict = Depends(require_admi
     threat_msg["timestamp"] = int(time.time() * 1000)
     threat_msg["attack_type"] = attack_type
     threat_msg["cognitive_report"] = cognitive_report
+    threat_msg["source"] = "synthetic_injection"
+    threat_msg["synthetic"] = True
     await manager.broadcast(threat_msg)
     insert_threat(threat_msg)
 
