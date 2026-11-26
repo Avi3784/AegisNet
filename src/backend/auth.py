@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import os
 import jwt
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -6,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from src.backend.db import SessionLocal
 from src.backend.models import User
 
-SECRET_KEY = "super-secret-key-for-aegisnet-demo"
+SECRET_KEY = os.getenv("AEGISNET_SECRET_KEY", "")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
@@ -20,6 +21,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         return False
 
 def create_access_token(data: dict):
+    if not SECRET_KEY:
+        raise RuntimeError("AEGISNET_SECRET_KEY must be configured before issuing tokens.")
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
@@ -51,6 +54,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
+        if not SECRET_KEY:
+            raise credentials_exception
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         role: str = payload.get("role")
