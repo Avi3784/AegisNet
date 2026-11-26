@@ -224,7 +224,7 @@ export default function Endpoints({ endpoints, onIsolate, onReconnect }) {
           <Monitor className="text-violet-400" size={24} />
           Endpoint Fleet Management
         </h2>
-        <p className="text-slate-400 text-sm mt-1">Monitor ATM endpoints, process execution trees, and containment status.</p>
+        <p className="text-slate-400 text-sm mt-1">ATM deployment scenario with synthetic endpoint telemetry. Controls change the demo state only; no real endpoint is isolated.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
