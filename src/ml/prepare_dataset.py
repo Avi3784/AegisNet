@@ -52,7 +52,8 @@ def clean_column_names(df):
         'FIN Flag Count': 'fin_flag_count',
         'RST Flag Count': 'rst_flag_count',
         'PSH Flag Count': 'psh_flag_count',
-        'Label': 'label'
+        'Label': 'label',
+        'Timestamp': 'timestamp'
     }
     df = df.rename(columns=rename_map)
     return df
@@ -98,14 +99,21 @@ def prepare_dataset():
             logger.error(f"File {file_path.name} produced 0 rows after label filtering.")
             return
             
-        # Select features + label
-        df = df[FEATURE_COLUMNS + ['label']]
+        # Preserve source timestamps so the model evaluation can use a chronological holdout.
+        selected = FEATURE_COLUMNS + ['label']
+        if 'timestamp' in df.columns:
+            df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce', dayfirst=False)
+            df = df.dropna(subset=['timestamp'])
+            selected = ['timestamp'] + selected
+        df = df[selected]
         dfs.append(df)
         
     if not dfs:
         raise ValueError("No data processed successfully.")
         
     full_df = pd.concat(dfs, ignore_index=True)
+    if 'timestamp' in full_df.columns:
+        full_df = full_df.sort_values('timestamp', kind='stable').reset_index(drop=True)
     
     # Replace Inf with finite max per column
     for col in ['flow_bytes_per_sec', 'flow_packets_per_sec']:
