@@ -1,5 +1,4 @@
 import time
-import json
 import logging
 from pathlib import Path
 from src.config import PROJECT_ROOT
@@ -40,7 +39,7 @@ class IPBlocker:
         try:
             with open(BLOCKLIST_FILE, "a") as f:
                 f.write(f"{ip_address},{attack_type},{confidence},{timestamp}\n")
-            logger.info(f"[INTERVENTION] Blocked IP: {ip_address} (Reason: {attack_type})")
+            logger.info(f"[SIMULATION] Recorded block decision for {ip_address} (Reason: {attack_type})")
         except Exception as e:
             logger.error(f"Failed to write to blocklist: {e}")
 
