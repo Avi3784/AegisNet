@@ -71,6 +71,7 @@ def train_ensemble():
     tn, fp, fn, tp = confusion_matrix(y_test, predictions, labels=[0, 1]).ravel()
     metrics = {
         "dataset_file": data_path.name,
+        "dataset_name": "CICIDS2017-derived selected-class flow subset",
         "split": "chronological_80_20_before_temporal_windowing",
         "train_rows": int(len(train_df)),
         "test_rows": int(len(test_df)),
