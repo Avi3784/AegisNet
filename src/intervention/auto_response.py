@@ -1,7 +1,6 @@
 import time
 import json
 import logging
-import subprocess
 from pathlib import Path
 from src.config import PROJECT_ROOT
 
@@ -28,9 +27,9 @@ class IPBlocker:
             logger.error(f"Failed to load blocklist: {e}")
 
     def block_ip(self, ip_address: str, attack_type: str = "Unknown", confidence: str = "High") -> bool:
-        """
-        Adds the IP to the local blocklist.txt file and Windows Firewall if it isn't already blocked.
-        Returns True if newly blocked, False if already blocked.
+        """Record a simulated block decision; never change host firewall rules.
+
+        Returns True if newly recorded, False if already present.
         """
         if ip_address in self.blocked_ips:
             return False
@@ -45,12 +44,7 @@ class IPBlocker:
         except Exception as e:
             logger.error(f"Failed to write to blocklist: {e}")
 
-        try:
-            cmd = f'New-NetFirewallRule -DisplayName "AegisNet Block {ip_address}" -Direction Inbound -Action Block -RemoteAddress {ip_address}'
-            subprocess.run(["powershell", "-Command", cmd], capture_output=True, text=True, check=True)
-            logger.info(f"[INTERVENTION] Windows Firewall rule added for IP: {ip_address}")
-        except Exception:
-            logger.warning("Failed to add firewall rule (requires admin)")
+        logger.info("[SIMULATION] No host firewall rule was changed for %s", ip_address)
 
         return True
 
