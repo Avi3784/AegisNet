@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 
 def download_dataset():
     logger.info("Searching Kaggle for cicids2017...")
-    os.environ['KAGGLE_API_TOKEN'] = "KGAT_48ac2e2d7008dec21a5ff7a8d0f3237c" # Temporary just to be safe
+    if not os.getenv("KAGGLE_API_TOKEN"):
+        raise RuntimeError("Set KAGGLE_API_TOKEN in your environment using a newly generated Kaggle token.")
     import sys
     try:
         slug = 'shadman1028/cicids2017-official-flow-feature-csv-files'
