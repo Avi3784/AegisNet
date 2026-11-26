@@ -95,15 +95,19 @@ const Analytics = ({ threats, endpoints }) => {
             Model Validation Report
           </h3>
           <div className="flex flex-wrap gap-2 text-xs font-mono text-slate-400">
-             <span className="bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700">Dataset: {modelData?.dataset || 'CIC-IDS2017'}</span>
-             <span className="bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700">Arch: {modelData?.architecture || 'RandomForest'}</span>
-             <span className="bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700">Features: {modelData?.feature_count || '78'}</span>
+             <span className="bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700">Dataset: {modelData?.metrics?.dataset_name || 'Not trained'}</span>
+             <span className="bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700">Arch: {modelData?.model_architecture || 'Not available'}</span>
+             <span className="bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700">Features: {modelData?.metrics?.feature_columns?.length ?? '—'}</span>
           </div>
         </div>
 
         {loadingModel ? (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
              {[1,2,3,4,5].map(i => <div key={i} className="h-24 skeleton rounded-xl"></div>)}
+          </div>
+        ) : modelData?.status !== 'available' ? (
+          <div className="rounded-xl border border-amber-500/20 bg-amber-950/10 p-4 text-sm text-slate-300">
+            No saved evaluation metrics are available yet. Run the documented XGBoost training pipeline to populate this panel. Demo traffic and synthetic events are not model evaluation results.
           </div>
         ) : (
           <>
@@ -133,7 +137,7 @@ const Analytics = ({ threats, endpoints }) => {
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between border-t border-slate-800 pt-4">
               <div className="flex items-center gap-2 text-emerald-400 text-sm font-bold bg-emerald-950/30 px-4 py-2 rounded-lg border border-emerald-500/30">
                 <CheckCircle size={16} />
-                Cross-Validation: {modelData?.cross_validation || modelData?.cross_validation_result || 'Passed'}
+                Evaluation split: {modelData?.metrics?.split || 'Not recorded'}
               </div>
 
               <div className="w-full md:w-auto">
@@ -156,7 +160,7 @@ const Analytics = ({ threats, endpoints }) => {
                   className="overflow-hidden"
                 >
                   <ul className="mt-4 space-y-2 bg-amber-950/10 p-4 rounded-xl border border-amber-500/20 text-slate-300 text-sm">
-                    {(modelData?.limitations || modelData?.known_limitations || ['May have higher false positive rate on novel attack variants.', 'Requires periodic retraining to maintain efficacy on zero-days.']).map((lim, i) => (
+                    {(modelData?.metrics?.limitations || ['Metrics describe only the static XGBoost pathway.', 'Bi-LSTM, VAE, calibration, and late fusion are not yet implemented.']).map((lim, i) => (
                       <li key={i} className="flex items-start gap-2">
                         <span className="text-amber-500 mt-1">•</span>
                         {lim}
