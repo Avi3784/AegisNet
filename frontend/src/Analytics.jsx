@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { Brain, CheckCircle, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Brain, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 
 const COLORS = ['#f43f5e', '#f59e0b', '#8b5cf6', '#06b6d4', '#10b981', '#ec4899'];
 
