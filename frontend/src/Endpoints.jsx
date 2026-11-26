@@ -205,7 +205,7 @@ export default function Endpoints({ endpoints, onIsolate, onReconnect }) {
         body: JSON.stringify({ payload: base64 })
       });
       const data = await res.json();
-      alert(`Sandbox Analysis:\n\nExtracted Strings:\n${data.extracted_strings?.join('\\n') || 'None'}`);
+      alert(`Static String Inspection (not detonation):\n\nURLs:\n${data.extracted_urls?.join('\\n') || 'None'}\n\nMatched indicators:\n${data.matched_string_indicators?.join('\\n') || 'None'}\n\nLimitations:\n${data.limitations?.join('\\n') || 'No additional details'}`);
     } catch(e) {
       alert("Sandbox request failed.");
     }
