@@ -227,17 +227,30 @@ async def inject_threat(payload: dict, current_user: dict = Depends(require_admi
 
 @app.post("/api/sandbox/detonate")
 async def sandbox_detonate(payload: dict, current_user: dict = Depends(get_current_user)):
+    """Perform a small, non-executing string inspection of a submitted text sample."""
     try:
         raw_b64 = payload.get("payload", "")
-        # Validate base64 by trying to decode it
-        decoded = base64.b64decode(raw_b64).decode("utf-8", errors="replace")
+        decoded = base64.b64decode(raw_b64, validate=True).decode("utf-8", errors="replace")
     except Exception:
-        pass # Ignore decode errors for mock
-    
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Payload must be valid base64-encoded content.")
+
+    import re
+    urls = sorted(set(re.findall(r"https?://[^\\s\"']+", decoded, flags=re.IGNORECASE)))
+    indicators = [
+        marker for marker in ("powershell", "net.webclient", "invoke-expression", "iex ")
+        if marker in decoded.lower()
+    ]
     return {
-        "status": "analyzed",
-        "extracted_strings": ["http://evil.com/payload.ps1", "IEX", "Net.WebClient"],
-        "behavior": "Downloads remote payload"
+        "status": "static_inspection_complete",
+        "analysis_mode": "non-executing string inspection",
+        "extracted_urls": urls,
+        "matched_string_indicators": indicators,
+        "limitations": [
+            "This is not malware detonation or sandbox execution.",
+            "String matches alone do not establish that a file is malicious.",
+            "No files or commands were executed."
+        ]
     }
 
 @app.get('/api/model/validation')
