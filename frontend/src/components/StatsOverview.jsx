@@ -120,7 +120,7 @@ const StatsOverview = ({ totalFlows, threatCount, blockedCount }) => {
         delay={0.1}
       />
       <StatCard 
-        title="IPs Auto-Blocked" 
+        title="Simulated Block Decisions" 
         value={blockedCount} 
         icon={ShieldOff} 
         bgGradient="bg-gradient-to-br from-[#0d1424] to-violet-900/40" 
