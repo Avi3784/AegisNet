@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Lock, User, Loader2 } from 'lucide-react';
-import { GoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from "jwt-decode";
 
 const AuthPage = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -38,18 +36,6 @@ const AuthPage = ({ onLogin }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogleSuccess = (credentialResponse) => {
-    const decoded = jwtDecode(credentialResponse.credential);
-    // In a real application, you'd send this token to the backend for verification
-    // and receive a session token. For this demo, we'll log them in directly
-    // based on Google verification.
-    onLogin(credentialResponse.credential, 'admin'); // Assuming Google login = admin for demo
-  };
-
-  const handleGoogleError = () => {
-    setError('Google Authentication Failed');
   };
 
   return (
@@ -113,7 +99,7 @@ const AuthPage = ({ onLogin }) => {
               <User className="absolute left-3 top-3 text-slate-500" size={20} />
               <input 
                 type="text" 
-                placeholder="Username (admin or analyst)"
+                placeholder="Username"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 className="w-full bg-slate-800/50 border border-slate-700 text-white pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
@@ -127,7 +113,7 @@ const AuthPage = ({ onLogin }) => {
               <Lock className="absolute left-3 top-3 text-slate-500" size={20} />
               <input 
                 type="password" 
-                placeholder="Password (e.g. admin123)"
+                placeholder="Password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 className="w-full bg-slate-800/50 border border-slate-700 text-white pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
@@ -159,22 +145,7 @@ const AuthPage = ({ onLogin }) => {
             </motion.button>
         </form>
 
-        <div className="mt-6 flex flex-col items-center">
-          <div className="flex items-center gap-4 w-full mb-6">
-            <div className="flex-1 h-px bg-slate-800" />
-            <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Enterprise SSO</span>
-            <div className="flex-1 h-px bg-slate-800" />
-          </div>
-          
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            useOneTap
-            theme="filled_black"
-            shape="rectangular"
-            text="continue_with"
-          />
-        </div>
+
       </motion.div>
     </div>
   );
