@@ -1,8 +1,8 @@
-"""
-This simulator generates synthetic ATM endpoint telemetry.
-Based on real Windows Event Log structure from ATMs running Windows 10 IoT Enterprise.
-Transaction messages follow ISO 8583 financial messaging standard.
-XFS (eXtensions for Financial Services) is the real middleware standard used by all ATM vendors.
+"""Generate illustrative synthetic ATM-style endpoint events for the dashboard.
+
+These are randomized demo fixtures, not collected Windows Event Logs, live
+ISO 8583 messages, or telemetry from real ATM hardware. They must be treated
+as simulated events in demonstrations and research reporting.
 """
 import asyncio
 import random
@@ -99,7 +99,9 @@ async def run_endpoint_simulator():
             "type": "endpoint_event",
             "endpointId": atm_id,
             "command": cmd,
-            "event": event_data
+            "event": event_data,
+            "source": "synthetic_endpoint_simulator",
+            "synthetic": True,
         }
         
         # We evaluate playbooks on this simulated event directly here
