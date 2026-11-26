@@ -8,10 +8,10 @@ const BlocklistTable = ({ blockedIPs }) => {
       <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-700/30">
         <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
           <ShieldBan className="text-rose-400" size={20} />
-          Active IP Blocklist
+          Simulated Block Decisions
         </h3>
         <span className="text-xs font-bold bg-rose-500/15 text-rose-400 px-2.5 py-1 rounded-full border border-rose-500/20">
-          {blockedIPs.length} Blocked
+          {blockedIPs.length} Recorded
         </span>
       </div>
 
@@ -29,7 +29,7 @@ const BlocklistTable = ({ blockedIPs }) => {
               {blockedIPs.length === 0 ? (
                 <tr>
                   <td colSpan="3" className="text-center py-8 text-slate-500 text-sm">
-                    No IPs blocked yet.
+                    No simulated block decisions recorded yet.
                   </td>
                 </tr>
               ) : (
