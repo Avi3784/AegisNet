@@ -1,85 +1,110 @@
-# AegisNet: Enterprise XDR & MLOps Platform
+# AegisNet
 
-AegisNet is a comprehensive Extended Detection and Response (XDR) platform designed to simulate, detect, and autonomously neutralize advanced cyber threats in real-time. It combines traditional Machine Learning (XGBoost) with a cutting-edge Generative AI Cognitive Engine to provide defense-in-depth against both known attack signatures and novel zero-day behaviors.
+**AegisNet is a research prototype for hybrid network intrusion detection and analyst-oriented incident triage.** It targets general network environments. An ATM-connected network is one possible deployment scenario, not the only target and not a separately validated environment.
 
-## System Architecture
+The repository contains a FastAPI backend, React dashboard, flow-feature processing, machine-learning pipeline, persistence, and analyst-facing workflows. Some workflows are demonstrations or simulations. This is not a production security appliance and must not be connected to live ATM or enterprise infrastructure as an autonomous blocking system.
 
-```text
-Raw Packets → DPI Feature Extraction (19 features) → XGBoost Classifier
-→ [Safe → Log] / [Attack → Cognitive Engine (Groq / Gemini)]
-→ FastAPI WebSocket → React + Tailwind Dashboard
-```
+## Research direction
 
-1. **Machine Learning Engine:** Ingests raw network flows and runs them through an XGBoost model pre-trained on the CIC-IDS-2017 dataset.
-2. **Cognitive Engine:** If a flow is classified as an attack, it is routed to the LLM backend (Groq, with a failover to Gemini). The LLM analyzes the raw packet features, generates a human-readable incident report, and maps the behavior to the MITRE ATT&CK framework.
-3. **Automated SOAR:** A natural-language Copilot acts as an autonomous agent, allowing security analysts to isolate endpoints or block IPs via simple chat commands.
+The accompanying paper proposes three stages:
 
----
+1. **Static pathway — XGBoost:** classify known attack patterns from flow-level features and produce a known-attack score.
+2. **Temporal pathway — Bi-LSTM:** learn representations from windows of consecutive flows (paper window length: 10), producing a 32-dimensional latent representation.
+3. **Anomaly pathway — VAE:** reconstruct the Bi-LSTM latent representation. The VAE is trained on benign latent representations; reconstruction error provides an anomaly score.
 
-## Machine Learning & Dataset Limitations
+The proposed late-fusion score is `R = alpha * calibrated_XGBoost_score + (1 - alpha) * calibrated_VAE_reconstruction_score`. The two scores must be calibrated independently on validation data. Fusion weights and decision thresholds must also be selected using validation data only.
 
-AegisNet utilizes the **CIC-IDS-2017** dataset. However, to bypass severe class imbalance and allow for real-time browser demonstration on standard hardware, the model is trained on a focused 3-class subset: **Brute-Force (Patator), DoS (Hulk, GoldenEye, Slowloris), and PortScan**. 
+**Research status:** the paper describes the complete Bi-LSTM → VAE → calibration → fusion path as proposed work. Do not interpret a standalone model, dashboard event, or demo injection as proof that this integrated architecture has been implemented or validated.
 
-### Model Performance Metrics (Simulated Testing)
-- **Accuracy:** 96.4%
-- **Precision (Attack Class):** 94.2%
-- **Recall (Attack Class):** 98.1%
-- **F1 Score:** 96.1%
+## Current prototype capabilities
 
-*Note: The system includes a live MLOps pipeline. Users can flag false positives/negatives in the dashboard to incrementally retrain the ensemble model on the fly, effectively building a custom dataset in real-time.*
+- FastAPI application and WebSocket live-feed interface.
+- React/Vite dashboard.
+- A 19-column flow-feature schema in `src/config.py`.
+- Flow CSV replay and model-inference code.
+- Model training scripts under `src/ml/`.
+- SQLite persistence for users, flows, threats, settings, and feedback.
+- Analyst-facing incident summaries and response/playbook interfaces.
+- Synthetic demo data and synthetic threat injection for UI walkthroughs.
 
----
+The demo data and `/api/inject` route are test fixtures. They exercise the interface; they are not evidence that a live network attack was detected. A synthetic injection must be labelled as a test event, not a model prediction.
 
-## The AI Cognitive Engine
+## Data and evaluation
 
-To prevent single-point-of-failure API limits during a live deployment, AegisNet utilizes a dual-LLM architecture:
-1. **Primary Analysis (Groq):** Used for ultra-low latency inference. It parses the attack vectors into JSON action-intents.
-2. **Fallback Analysis (Google Gemini):** If Groq hits a rate limit or times out, the system automatically seamlessly fails over to Gemini Flash.
+The project has used CICIDS2017-derived flow data. Public enterprise intrusion datasets are not ATM-specific.
 
-The Cognitive engine explicitly maps zero-day anomalous behaviors to the MITRE ATT&CK matrix (e.g., *T1059 Command and Scripting Interpreter*), answering the crucial question: **"Why was this flagged?"** directly in the UI.
+- Report results on CICIDS2017, CSE-CIC-IDS2018, or UNSW-NB15 as results on those datasets, not as ATM detection accuracy.
+- Publish performance numbers only when reproducible from a saved evaluation run with dataset version, split, feature schema, model artifact, and metrics recorded.
+- Accuracy alone is insufficient. Report precision, recall, F1, false-positive rate, confusion matrix, AUROC where appropriate, and latency/throughput when measured.
+- Split data chronologically before constructing temporal windows. Fit preprocessing only on training data. Keep windows from crossing train/validation/test boundaries.
+- Keep held-out attack-family and cross-dataset experiments separate from ordinary random-split results.
 
----
+## Demo and operational safety
 
-## Quickstart & Local Setup
+Run locally or in an isolated lab with authorized sample data.
 
-### 1. Backend (FastAPI + ML)
+- Use synthetic fixtures only for UI and workflow demonstrations, and label them as synthetic.
+- Keep endpoint isolation, IP blocking, and other response actions in simulation mode unless an authorized operator explicitly approves a controlled lab action.
+- Treat LLM-generated explanations as analyst assistance, not as detection evidence or authority to take response actions.
+- Do not upload sensitive PCAPs or credentials to third-party services.
+- Configure secrets through environment variables. Never commit API keys, passwords, signing keys, or real customer traffic.
+
+## Local setup
+
+### Backend
+
 ```bash
-python -m venv venv
-# Windows
-.\venv\Scripts\activate
-# Linux/Mac
-source venv/bin/activate
-
+python -m venv .venv
+# Windows: .venv\\Scripts\\activate
+# Linux/macOS:
+source .venv/bin/activate
 pip install -r requirements.txt
-
-# Run the API and WebSocket server
-uvicorn src.backend.main:app --port 8000
+uvicorn src.backend.main:app --reload --port 8000
 ```
 
-### 2. Frontend (React + Vite)
+### Frontend
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### 3. Environment Variables
-Create a `.env` file in the root directory:
+### Environment
+
+Create a local `.env` file for optional integrations. Do not commit it.
+
 ```env
-GROQ_API_KEY=your_key_here
-GEMINI_API_KEY=your_key_here
+GROQ_API_KEY=
+GEMINI_API_KEY=
+AEGISNET_SECRET_KEY=
 ```
 
-*(Note: Vercel deployments require `VITE_API_URL` and `VITE_WS_URL` to point to your live backend).*
+The API can start in demo mode when trained model artifacts are absent. Demo mode must be visibly distinguished from model-backed inference.
 
----
+## Repository map
 
-## Global Deployment (Hugging Face Spaces + Vercel)
+- `src/backend/` — API, persistence, WebSocket feed, authentication, analyst workflows.
+- `src/ml/` — data preparation and model training.
+- `src/dpi/` — flow feature extraction.
+- `src/cognitive/` — LLM-assisted incident explanation.
+- `src/intervention/` — response workflow and simulation.
+- `frontend/` — dashboard.
+- `models/` — local model artifacts; artifacts alone are not reproducible evidence.
 
-AegisNet is fully Dockerized for immediate cloud deployment. 
-1. **Backend:** Connect this repository to a **Hugging Face Space** (Docker environment). Hugging Face will automatically read the `Dockerfile`, install the massive XGBoost dependencies using their 16GB RAM free tier, and expose port 7860.
-2. **Frontend:** Connect the `frontend` folder to **Vercel**, add the Hugging Face backend URL to the Environment Variables, and deploy.
+## Known limitations and next research milestones
 
----
+These are completion targets, not claims of current capability:
+
+1. Reconcile the canonical feature schema and model artifact format across training and inference.
+2. Implement the paper's Bi-LSTM latent representation and benign-only VAE training path.
+3. Add validation-only calibration, weighted late fusion, and the documented decision rule.
+4. Add chronological, leakage-safe splits and held-out attack-family evaluation.
+5. Add ablations, multiple seeds, statistical uncertainty, and cross-dataset evaluation.
+6. Record reproducible model metadata, dataset provenance, metrics, and inference timing.
+7. Harden authentication, secrets, permissions, and safe-by-default response simulation.
+8. Add automated backend tests and a repeatable end-to-end demo.
+
 ## License
+
 MIT License
