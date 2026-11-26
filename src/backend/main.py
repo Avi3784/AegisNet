@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import json
 import pandas as pd
 import xgboost as xgb
 import joblib
@@ -151,7 +152,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 @app.post("/api/inject")
-async def inject_threat(payload: dict):
+async def inject_threat(payload: dict, current_user: dict = Depends(require_admin)):
     """
     Inject a synthetic flow directly into the pipeline.
     Expects: { "attack_type": str, "features": { <19 feature cols> } }
@@ -241,31 +242,28 @@ async def sandbox_detonate(payload: dict, current_user: dict = Depends(get_curre
 
 @app.get('/api/model/validation')
 async def model_validation():
+    """Return metrics from the latest saved training run, never demo constants."""
+    metrics_path = MODEL_DIR / "metrics.json"
+    if not metrics_path.exists():
+        return {
+            "status": "not_available",
+            "message": "No evaluated model artifact is available. Train the static XGBoost pathway first.",
+            "model_loaded": _model is not None,
+            "integrated_hybrid_status": "Bi-LSTM/VAE/fusion not yet implemented",
+        }
+    try:
+        with open(metrics_path, "r", encoding="utf-8") as handle:
+            metrics = json.load(handle)
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.exception("Could not read model metrics.")
+        return {"status": "error", "message": "Saved evaluation metrics could not be read."}
     return {
-        'dataset': 'CIC-IDS-2017 (Canadian Institute for Cybersecurity)',
-        'subset': '3-class: Brute-Force (Patator), DoS (Hulk/GoldenEye/Slowloris), PortScan',
-        'total_samples': 461798,
-        'train_test_split': '80/20 stratified',
-        'model_architecture': 'Ensemble (XGBoost + LightGBM + RandomForest) with Hard Voting',
-        'scaler': 'RobustScaler (handles outliers better than StandardScaler)',
-        'feature_count': 19,
-        'metrics': {
-            'accuracy': 0.9964,
-            'precision': 0.9942,
-            'recall': 0.9981,
-            'f1': 0.9961,
-            'roc_auc': 0.9995
-        },
-        'cross_validation': '5-fold Cross-Validation (Average Accuracy: 99.5%)',
-        'validation_methodology': 'We used 20% of the data to test the model. We made sure both normal traffic and attack traffic were equally represented to ensure accuracy.',
-        'limitations': [
-            'Trained on 2017 data; completely new attack types from 2024+ might not be caught perfectly.',
-            'The dataset has mostly normal (safe) traffic, but we balanced it during training.',
-            'It checks network flow data, not the actual contents of encrypted files.',
-            'The system continuously learns and updates itself to catch new threats.'
-        ]
+        "status": "available",
+        "model_architecture": "XGBoost static pathway",
+        "model_loaded": _model is not None,
+        "integrated_hybrid_status": "Bi-LSTM/VAE/fusion not yet implemented",
+        "metrics": metrics,
     }
-
 @app.get("/api/history")
 async def get_history(current_user: dict = Depends(get_current_user)):
     return {
