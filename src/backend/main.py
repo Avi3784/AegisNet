@@ -236,7 +236,7 @@ async def sandbox_detonate(payload: dict, current_user: dict = Depends(get_curre
         raise HTTPException(status_code=400, detail="Payload must be valid base64-encoded content.")
 
     import re
-    urls = sorted(set(re.findall(r"https?://[^\\s\"']+", decoded, flags=re.IGNORECASE)))
+    urls = sorted(set(re.findall(r"https?://\S+", decoded, flags=re.IGNORECASE)))
     indicators = [
         marker for marker in ("powershell", "net.webclient", "invoke-expression", "iex ")
         if marker in decoded.lower()
