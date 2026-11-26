@@ -8,3 +8,8 @@ data/aegis.db
 *.log
 .DS_Store
 frontend/dist/
+.venv/
+data/processed/
+models/
+data/blocklist.txt
+.pytest_cache/
