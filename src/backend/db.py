@@ -1,4 +1,5 @@
 import json
+import os
 import logging
 import time
 from pathlib import Path
@@ -40,14 +41,19 @@ def init_db():
         logger.error(f"Database initialization failed: {e}")
 
 def seed_users(db):
-    if db.query(User).count() == 0:
-        admin_hash = hash_password("admin123")
-        analyst_hash = hash_password("analyst123")
-        db.add(User(username="admin", password_hash=admin_hash, role="admin"))
-        db.add(User(username="analyst", password_hash=analyst_hash, role="analyst"))
-        db.commit()
-        logger.info("Seeded default users (admin/admin123, analyst/analyst123)")
+    """Optionally bootstrap an admin account from a local environment secret.
 
+    Existing accounts are never overwritten. No public default credentials are
+    created; set AEGISNET_ADMIN_PASSWORD before first initialization if needed.
+    """
+    if db.query(User).count() == 0:
+        password = os.getenv("AEGISNET_ADMIN_PASSWORD", "")
+        if not password:
+            logger.warning("No users exist. Set AEGISNET_ADMIN_PASSWORD to bootstrap an admin account.")
+            return
+        db.add(User(username="admin", password_hash=hash_password(password), role="admin"))
+        db.commit()
+        logger.info("Bootstrapped admin account from environment configuration.")
 def insert_flow(flow_data):
     db = SessionLocal()
     try:
