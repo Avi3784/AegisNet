@@ -25,7 +25,9 @@ The proposed late-fusion score is `R = alpha * calibrated_XGBoost_score + (1 - a
 - Model training scripts under `src/ml/`.
 - SQLite persistence for users, flows, threats, settings, and feedback.
 - Analyst-facing incident summaries and response/playbook interfaces.
-- Synthetic demo data and synthetic threat injection for UI walkthroughs.
+- Synthetic ATM-style endpoint telemetry, synthetic threat injection, and local response-decision records for UI walkthroughs.
+- A non-executing string-inspection helper for base64-encoded text samples.
+- A clearly labelled synthetic text/hex forensic export; it is not a genuine PCAP capture.
 
 The demo data and `/api/inject` route are test fixtures. They exercise the interface; they are not evidence that a live network attack was detected. A synthetic injection must be labelled as a test event, not a model prediction.
 
@@ -44,7 +46,7 @@ The project has used CICIDS2017-derived flow data. Public enterprise intrusion d
 Run locally or in an isolated lab with authorized sample data.
 
 - Use synthetic fixtures only for UI and workflow demonstrations, and label them as synthetic.
-- Keep endpoint isolation, IP blocking, and other response actions in simulation mode unless an authorized operator explicitly approves a controlled lab action.
+- Endpoint isolation controls only change frontend demo state. IP block decisions are recorded locally for demonstration; no host firewall rules are changed. Do not describe these as actual containment.
 - Treat LLM-generated explanations as analyst assistance, not as detection evidence or authority to take response actions.
 - Do not upload sensitive PCAPs or credentials to third-party services.
 - Configure secrets through environment variables. Never commit API keys, passwords, signing keys, or real customer traffic.
