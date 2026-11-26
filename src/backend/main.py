@@ -27,7 +27,6 @@ from src.backend.db import (
 )
 from src.backend.endpoint_simulator import run_endpoint_simulator
 from src.backend.playbooks import evaluate_playbooks
-from src.backend.mlops import retrain_model_incremental
 
 
 logging.basicConfig(level=logging.INFO)
