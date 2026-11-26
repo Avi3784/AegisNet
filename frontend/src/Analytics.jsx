@@ -135,8 +135,7 @@ const Analytics = ({ threats, endpoints }) => {
             </div>
 
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between border-t border-slate-800 pt-4">
-              <div className="flex items-center gap-2 text-emerald-400 text-sm font-bold bg-emerald-950/30 px-4 py-2 rounded-lg border border-emerald-500/30">
-                <CheckCircle size={16} />
+              <div className="flex items-center gap-2 text-slate-300 text-sm font-medium bg-slate-900/50 px-4 py-2 rounded-lg border border-slate-700">
                 Evaluation split: {modelData?.metrics?.split || 'Not recorded'}
               </div>
 
