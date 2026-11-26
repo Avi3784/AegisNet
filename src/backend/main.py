@@ -166,10 +166,13 @@ async def inject_threat(payload: dict):
         val = float(features.get(col, 0.0))
         clean[col] = 1e9 if val == float('inf') else val
 
-    # Run model
-    df_row = pd.DataFrame([clean])[FEATURE_COLUMNS]
-    scaled = _scaler.transform(df_row)
-    prediction = 1  # Force prediction to 1 for simulated attacks
+    # This endpoint creates a synthetic test event. Model output is recorded
+    # separately when a model is available; it does not determine the test label.
+    prediction = None
+    if _model is not None and _scaler is not None:
+        df_row = pd.DataFrame([clean])[FEATURE_COLUMNS]
+        scaled = _scaler.transform(df_row)
+        prediction = int(_model.predict(scaled)[0])
 
     # Broadcast flow event
     flow_msg = WS_FLOW_TEMPLATE.copy()
@@ -181,12 +184,14 @@ async def inject_threat(payload: dict):
         "dst_port": int(clean.get("destination_port", 80)),
         "protocol": payload.get("protocol", "TCP"),
         "flags": payload.get("flags", "S"),
-        "prediction": prediction
+        "prediction": prediction,
+        "source": "synthetic_injection",
+        "synthetic": True,
     }
     await manager.broadcast(flow_msg)
     insert_flow(flow_msg)
 
-    # Always treat injected flows as threats for demo purposes
+    # This is a user-requested synthetic scenario, not a model-confirmed alert.
     cognitive_report = await cognitive_engine.analyze_threat(clean)
     threat_msg = WS_THREAT_TEMPLATE.copy()
     threat_msg["timestamp"] = int(time.time() * 1000)
@@ -216,7 +221,7 @@ async def inject_threat(payload: dict):
 
     await evaluate_playbooks(payload)
 
-    return {"status": "injected", "prediction": prediction, "attack_type": attack_type}
+    return {"status": "injected", "synthetic": True, "model_prediction": prediction, "attack_type": attack_type}
 
 
 @app.post("/api/sandbox/detonate")
@@ -307,8 +312,9 @@ async def ml_feedback(payload: dict, current_user: dict = Depends(get_current_us
     threat_id = payload.get("threat_id")
     is_true_positive = payload.get("is_true_positive", True)
     insert_ml_feedback(threat_id, is_true_positive)
-    asyncio.create_task(retrain_model_incremental(payload))
-    return {"status": "success", "message": "Feedback recorded. Model will be retrained during next cycle."}
+    # Feedback is stored for later batch evaluation; a single analyst label
+    # must not mutate a deployed model without a validated retraining workflow.
+    return {"status": "success", "message": "Feedback recorded for a future reviewed training run."}
 
 @app.get("/api/settings")
 async def get_settings_api(current_user: dict = Depends(require_admin)):
